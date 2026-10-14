@@ -1,8 +1,18 @@
 diff --git a/dist/index.js b/dist/index.js
-index 69ebcccc40766ccd1e8c6ff9a72601d380f8b8d8..69cb45506513243c551aec23d560693ad0a378b6 100644
+index 32740f33c8e9ae9d400708c6bdd2fec2b53e8061..1a9e169f33a102ae33ce836c09f249b44ff57f2e 100644
 --- a/dist/index.js
 +++ b/dist/index.js
-@@ -415,9 +415,10 @@ const publishRelay = (root, relay) => Effect.gen(function* () {
+@@ -263,7 +263,8 @@ class RelayBindFailed extends Data.TaggedError('RelayBindFailed') {
+ const isPortInUse = (error) => Predicate.hasProperty(error, 'code') && error.code === 'EADDRINUSE';
+ const relayId = Effect.gen(function* () {
+     const crypto = yield* Crypto.Crypto;
+-    return yield* crypto.randomUUIDv4.pipe(Effect.orDie);
++    // PATCH: Effect 4.0.4 exposes UUID generation as a method.
++    return yield* crypto.randomUUIDv4().pipe(Effect.orDie);
+ });
+ const attachRelayHandlers = (wss, enqueue) => {
+     wss.on('connection', client => {
+@@ -440,9 +441,10 @@ const publishRelay = (root, relay) => Effect.gen(function* () {
  }).pipe(Effect.catchTag('RelayRegistryDirectoryRefused', ({ directory, reason }) => Console.error(unpublishedRelayMessage(`the registry directory ${directory} ${reason}`))), Effect.catch(error => Console.error(unpublishedRelayMessage('the registry could not be written'), error)));
  const startMcpRelay = (server, devToolsMcpPort, enqueue) => {
      const root = server.config.root;
@@ -16,7 +26,7 @@ index 69ebcccc40766ccd1e8c6ff9a72601d380f8b8d8..69cb45506513243c551aec23d560693a
      // NOTE: A configured port keeps the previous unauthenticated behavior.
      // An assigned port binds only to loopback and is found through the registry.
      const acquire = Effect.gen(function* () {
-@@ -426,10 +427,7 @@ const startMcpRelay = (server, devToolsMcpPort, enqueue) => {
+@@ -451,10 +453,7 @@ const startMcpRelay = (server, devToolsMcpPort, enqueue) => {
              return yield* bindStandaloneRelay(devToolsMcpPort, id, enqueue);
          }
          const token = yield* relayToken;

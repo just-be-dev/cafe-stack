@@ -6,7 +6,7 @@ Every patch needs an entry here. Inside the patched code, mark the change with a
 
 ## Foldkit DevTools MCP reconnect loop under `alchemy dev`
 
-Patches `@foldkit/vite-plugin@0.26.0` and `@foldkit/devtools-mcp@0.24.0`.
+Patches `@foldkit/vite-plugin@0.27.1` and `@foldkit/devtools-mcp@0.24.1`.
 
 **Symptom.** Under `alchemy dev`, every agent session's Foldkit DevTools MCP server connected to the relay and disconnected many times per second. The MCP tools were unusable, and the dev server log filled with `MCP client connected` and `MCP client disconnected` lines.
 
@@ -18,7 +18,7 @@ Patches `@foldkit/vite-plugin@0.26.0` and `@foldkit/devtools-mcp@0.24.0`.
 **Patches.**
 
 - `@foldkit/vite-plugin`: `startMcpRelay` always uses `bindLoopbackRelay`, which is a token-protected listener on its own `127.0.0.1` port, published to the relay registry. The relay no longer attaches to Vite's `httpServer`, so Alchemy's upgrade listener never sees it. The fixed `devToolsMcpPort` path is unchanged.
-- `@foldkit/devtools-mcp`: in `webSocketClient.js`, a connection that closes within 5 seconds of opening counts as a failure. Reconnects then back off exponentially, from 0.5 s up to 30 s. A connection that stays up longer resets the backoff.
+- `@foldkit/devtools-mcp`: in `dist/webSocketClient.js` and the bundled `dist/server.js` executable, a connection that closes within 5 seconds of opening counts as a failure. Reconnects then back off exponentially, from 0.5 s up to 30 s. A connection that stays up longer resets the backoff.
 
 **Remove when** either fix lands upstream and the dev server log shows one stable `MCP client connected` per MCP server under `alchemy dev`:
 
@@ -26,3 +26,17 @@ Patches `@foldkit/vite-plugin@0.26.0` and `@foldkit/devtools-mcp@0.24.0`.
 - Alchemy's `handleWebSocket` stops forwarding upgrades that another listener has already handled, or only forwards paths the worker serves.
 
 The backoff patch is worth keeping until Foldkit has its own backoff. It stops the loop whatever the cause of the drop.
+
+Rechecked on the stack upgrade to Alchemy `2.0.0-beta.83` and Foldkit `0.168.0`: both upstream behaviors remain. The MCP executable now bundles the client, so its copy needs the same backoff as the importable client module. Verify both entry points against a relay that accepts and immediately closes sockets, plus a browser-connected MCP session under `mise run dev`.
+
+## Foldkit relay UUID generation with Effect 4.0.4
+
+Included in the `@foldkit/vite-plugin@0.27.1` patch above.
+
+**Symptom.** The browser runtime connects under `alchemy dev`, but no MCP relay starts and model inspection reports that no dev server is connected.
+
+**Cause.** The plugin treats `crypto.randomUUIDv4` as an Effect value. In Effect `4.0.4` and its aligned platforms it is a method. The relay fiber fails before binding its listener.
+
+**Fix.** Call `crypto.randomUUIDv4()` before piping through `Effect.orDie`. Keep the secure loopback relay and token unchanged.
+
+**Remove when** the installed plugin calls the method and a browser-connected MCP session can read the model with the aligned Effect/platform versions without this hunk.

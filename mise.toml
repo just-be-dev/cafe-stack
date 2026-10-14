@@ -63,4 +63,4 @@ usage = 'arg "<package>" help="package name, e.g. @foldkit/vite-plugin"'
 run = 'bun patch --commit "node_modules/${usage_package}"'
 
 [tools]
-bun = "1.4.2"
+bun = "1.4.3"

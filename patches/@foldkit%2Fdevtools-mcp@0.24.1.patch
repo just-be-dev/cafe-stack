@@ -1,5 +1,47 @@
+diff --git a/dist/server.js b/dist/server.js
+index ca4311d61657d34369f3077ee63405650747708f..c35fd13370a130f99a316228bcc7b99bf74d5da4 100755
+--- a/dist/server.js
++++ b/dist/server.js
+@@ -42371,6 +42371,9 @@ require_websocket_server();
+ const REQUEST_TIMEOUT = seconds(10);
+ const INITIAL_RECONNECT_DELAY = millis(500);
+ const MAX_RECONNECT_DELAY = seconds(30);
++// PATCH: keep short-lived reconnect backoff in the bundled CLI too.
++const MIN_STABLE_CONNECTION = seconds(5);
++const shortLivedReconnectDelay = (failures) => millis(Math.min(toMillis(INITIAL_RECONNECT_DELAY) * 2 ** (failures - 1), toMillis(MAX_RECONNECT_DELAY)));
+ const encodeRequestFrameToJson = encodeUnknownSync(fromJsonString(RequestFrame));
+ const generateRequestId = () => `req-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+ const reconnectSchedule = exponential(INITIAL_RECONNECT_DELAY).pipe(modifyDelay(({ duration }) => succeed$1(min(duration, MAX_RECONNECT_DELAY))));
+@@ -42430,18 +42433,24 @@ const connectWebSocketClient = (resolveUrl) => gen(function* () {
+ 		socket,
+ 		url
+ 	})), tapError((error) => error$1(`[foldkit-devtools-mcp] connect attempt to ${relayUrlForLog(url)} failed: ${error.message}`)))), retry(reconnectSchedule), orDie);
+-	const maintainConnection = gen(function* () {
++	const maintainConnection = (shortLivedFailures) => gen(function* () {
+ 		const { socket, url } = yield* openWithBackoff;
++		const openedAt = yield* clockWith(clock => clock.currentTimeMillis);
+ 		yield* error$1(`[foldkit-devtools-mcp] connected to ${relayUrlForLog(url)}`);
+ 		attachMessageHandler(socket);
+ 		yield* set(currentSocketRef, some(socket));
+ 		yield* waitForClose(socket);
+ 		if (yield* get(isManuallyClosedRef)) return;
+ 		yield* set(currentSocketRef, none());
++		const closedAt = yield* clockWith(clock => clock.currentTimeMillis);
++		const failures = closedAt - openedAt < toMillis(MIN_STABLE_CONNECTION) ? shortLivedFailures + 1 : 0;
+ 		yield* error$1("[foldkit-devtools-mcp] connection lost, reconnecting");
+-		yield* maintainConnection;
++		if (failures > 0) {
++			yield* sleep(shortLivedReconnectDelay(failures));
++		}
++		yield* maintainConnection(failures);
+ 	});
+-	const connectionFiber = yield* forkDetach(maintainConnection);
++	const connectionFiber = yield* forkDetach(maintainConnection(0));
+ 	const sendRequest = (request, maybeRuntimeId) => gen(function* () {
+ 		const maybeSocket = yield* get(currentSocketRef);
+ 		const socket = yield* match$3(maybeSocket, {
 diff --git a/dist/webSocketClient.js b/dist/webSocketClient.js
-index 5a4ceb26f220f96735d8554a60f13cada0fbbb43..8501f0e92e7e518b033ffee2f37a48ad70642c97 100644
+index 5a4ceb26f220f96735d8554a60f13cada0fbbb43..e3f03bb910564d8921187e5153c80930571dca16 100644
 --- a/dist/webSocketClient.js
 +++ b/dist/webSocketClient.js
 @@ -1,9 +1,14 @@

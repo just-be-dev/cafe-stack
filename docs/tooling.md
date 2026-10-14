@@ -24,7 +24,7 @@ Effect 4 is a stable release; older guides that call it a pre-release are out of
 
 - `mise.toml`: pins Bun, turns on experimental settings and pinning, adds `node_modules/.bin` to PATH, and installs the dependencies locked in `bun.lock` after tools install, so `mise install` is the only setup step. Each package script has a matching mise task, and `mise tasks` lists them all. Change tool versions with `mise use bun@<version>`.
 - `bunfig.toml`: limits test discovery to `./src`.
-- `package.json`: ESM, `private: true`, scripts, exact pins, the workerd override, and Bun patch mappings.
+- `package.json`: ESM, `private: true`, scripts, exact pins, the Effect/platform and workerd overrides, and Bun patch mappings.
 - `tsconfig.json`: strict mode, `noUncheckedIndexedAccess`, bundler resolution, preserved modules, `verbatimModuleSyntax`, and the Effect language-service plugin. Browser, Worker, and Bun types are all loaded; the boundary test keeps native globals out of backend domains.
 - Language-service overrides allow the unstable `effect/http` module only in HTTP, UI command, and platform API files. `effect-oxlint` is allowed as a duplicate Effect consumer. Add narrow per-file exceptions for other unstable APIs as you use them.
 - `vite.config.ts`: the `foldkit()` and Tailwind plugins, UI entry optimization, the `@/` alias, Effect/Foldkit deduplication, and a watch exclusion for `.alchemy/`. Alchemy adds its Cloudflare integration on top for dev and deploy. `mise run build` checks the UI bundle locally.
@@ -53,11 +53,15 @@ mise run dev
 
 ## Patches
 
-Under `alchemy dev`, Cloudflare's Vite upgrade listener interferes with Foldkit's DevTools relay on Vite's HTTP server. One patch moves the relay to its own token-protected loopback listener. The other adds backoff when a connection closes right after opening. See [patches/README.md](../patches/README.md).
+Under `alchemy dev`, Cloudflare's Vite upgrade listener interferes with Foldkit's DevTools relay on Vite's HTTP server. One patch moves the relay to its own token-protected loopback listener. The other adds backoff when a connection closes right after opening, in both MCP client entry points. The Vite patch also adapts UUID generation to Effect 4.0.4. See [patches/README.md](../patches/README.md).
 
 Edit patches with `mise run patch <package>` and `mise run patch:commit <package>`, and document the symptom, cause, fix, and when to remove it. After an upgrade, check whether each patch is still needed and run a browser-connected DevTools session under `alchemy dev`; a clean install doesn't prove the relay is stable. Keep the relay on loopback with its token.
 
-Revisit the workerd override whenever you upgrade Alchemy.
+Effect and its platform packages are aligned at `4.0.4` through exact overrides. Foldkit `0.168.0`, its tools, and the Effect lint wrapper still declare `4.0.0` dependencies or peers; the overrides keep one Effect instance and matching platform APIs. Recheck these overrides against upstream declarations on every upgrade and verify the native Workers and browser runtime together.
+
+Agents' required MCP peers (`@modelcontextprotocol/client`, `@modelcontextprotocol/server`, and `@modelcontextprotocol/sdk`) are explicit exact dependencies. Foldkit DevTools keeps its own SDK version, as required by its package.
+
+The workerd override is `1.20261014.1`; Alchemy's Cloudflare runtime currently pins an older build. Revisit the override whenever you upgrade Alchemy and smoke-test both local Workers.
 
 ## AI and durable workflows
 

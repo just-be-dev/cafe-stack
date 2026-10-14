@@ -111,13 +111,15 @@ Define a Command with `Command.define(name, { args, messages, execute })`; omit 
 
 Command args contain values already present in the Model or Message. Calling `Date.now()`, `crypto.randomUUID()`, or another source of time or randomness while preparing a Command happens before the Command executes, whether the call appears directly in the args object or its result is assigned to a local variable first. Obtain those values in `execute` and return them in the result Message.
 
-For the with-args shape, see upstream `examples/weather/src/main.ts` or `examples/kanban/src/command.ts`. For an argless DOM-side-effect Command, the argless form in `examples/kanban/src/command.ts` (`FocusAddCardInput`) is the canonical reference.
+For the with-args shape, see `examples/weather/src/main.ts` or `examples/kanban/src/command.ts`. For an argless DOM-side-effect Command, the argless form in `examples/kanban/src/command.ts` (`FocusAddCardInput`) is the canonical reference.
 
 For DOM operations (focus, scroll, modals, scroll lock), Foldkit ships a `Dom` module. For time, randomness, UUIDs, and delays, use Effect's APIs directly (`Clock`, `Random`, `Crypto.Crypto`, `Effect.sleep`). Provide the platform Crypto layer when using `Crypto.Crypto`. Don't reach for raw `document.querySelector`, `setTimeout`, `Date.now()`, or `Math.random()`.
 
 ### File Organization
 
-The invariant: keep the runtime boot separate from the pure definitions. `src/ui/entry.ts` calls `Runtime.makeApplication` and `Runtime.run`, and `index.html` references it. The definitions (Model, Messages, init, update, view, Commands) never call `Runtime.run`, so they stay importable from tests without booting a runtime as a side effect. Never call `Runtime.run` from `main.ts`.
+Keep the runtime boot separate from the pure definitions. `src/ui/entry.ts` calls `Runtime.makeApplication`, then `Runtime.run` for a client-rendered app or `Runtime.hydrate` for an SSR or SSG app. A client-rendered app references that entry from `index.html`. An SSR or SSG app names it in `ssr.clientEntry` in `vite.config.ts`, imports CSS from it, and exports `renderDocument` from `src/ui/entry.server.ts` to produce the complete document. Its source tree has no `index.html`.
+
+The definitions (Model, Messages, init, update, view, Commands) never call `Runtime.run` or `Runtime.hydrate`, so tests and server entries can import them without booting a browser runtime. Keep both calls out of `main.ts`.
 
 For a small app the definitions all fit in one `src/ui/main.ts`. Split a unit into its own file when it has _both_ a distinct reason to change _and_ a name you'd give it unprompted: the pure domain core into `timer.ts` or `domain.ts`, the view into `view.ts` (or a `components/` directory), a Command's owned resource into its own module. Split on that revealed seam, not on line count alone. A file that has grown large is _evidence_ a seam has formed, so treat its size as a prompt to re-check for one. Two splits are forced: extract Messages to `message.ts` when Commands need the constructors (this breaks the cycle between `command.ts` and `main.ts`), and colocate Commands with the update that returns them. Exemplars: counter and stopwatch are a single `main.ts`; kanban splits `domain` / `command` / `message` / `model`; typing-game splits views by page.
 
@@ -131,7 +133,7 @@ Import the steps as named imports from `foldkit/story` or `foldkit/scene`: `impo
 
 Name each test file for its test style, beside the code under test: `story.test.ts` for the Story tests (which drive `update`) and `scene.test.ts` for the Scene tests (which drive the rendered view). The name describes how the test works, not a source file, so it stays correct whether `update` and `view` live in `main.ts` or in their own files. A test file lives in the folder that holds the code it drives, so in a multi-page app most of them sit in a page folder rather than at the root. When one folder holds more than one test of a kind (sibling pages, component variants), prefix with the subject: `login.story.test.ts`.
 
-Scene runs at any level, since a page's own `update`/`view` pair drops into `scene` unmodified. Put a `scene.test.ts` in the page folder for behavior that page owns, which covers view states awkward to reach through the root Model, and keep a root-level `scene.test.ts` for flows that cross pages, which covers how the parent folds an OutMessage, a Command the parent lifts, a route change, and view inputs the parent computes. Study the `story.test.ts` and `scene.test.ts` files in upstream `examples/`. `examples/auth` is the multi-page shape: a root `src/scene.test.ts` for the cross-page login flow alongside `src/page/loggedOut/page/login.scene.test.ts` and `login.story.test.ts` driving that page's own pair.
+Scene runs at any level, since a page's own `update`/`view` pair drops into `scene` unmodified. Put a `scene.test.ts` in the page folder for behavior that page owns, which covers view states awkward to reach through the root Model, and keep a root-level `scene.test.ts` for flows that cross pages, which covers how the parent folds an OutMessage, a Command the parent lifts, a route change, and view inputs the parent computes. Study the `story.test.ts` and `scene.test.ts` files in `examples/`. `examples/auth` is the multi-page shape: a root `src/scene.test.ts` for the cross-page login flow alongside `src/page/loggedOut/page/login.scene.test.ts` and `login.story.test.ts` driving that page's own pair.
 
 ## Code Style
 
@@ -168,8 +170,10 @@ Messages are verb-first past-tense. Common prefixes: `Clicked*`, `Updated*` (inp
 
 This project ships with `@foldkit/devtools-mcp` pre-wired. When the dev server is running and the app is open in a browser, `foldkit_*` MCP tools let you inspect Model, Message history, and time-travel. Reach for them before adding `console.log` whenever the question is about state or Message flow.
 
+Treat those tools as privileged access to the application. They can return Models, Message payloads, and Command and Mount arguments to the agent. Keep credentials and private data out of browser state. Use Effect `Redacted` for sensitive values the browser must temporarily hold, and set `devToolsMcpPort: false` in the Foldkit Vite plugin options when an agent should not inspect the running application.
+
 ## Going Deeper
 
-For Submodels and OutMessage, Subscriptions, Mount / ManagedResource / CustomElement, field validation, routing, accessibility, and the full convention set, read upstream Foldkit code at the installed release tag. The `examples/` directory and the production apps (`packages/typing-game/`, `packages/website/`) are the highest-fidelity references for any specific pattern.
+For Submodels and OutMessage, Subscriptions, Mount / ManagedResource / CustomElement, field validation, routing, accessibility, and the full convention set, read upstream Foldkit code at the installed release tag. The `examples/` directory and the production apps (`packages/typing-game/`, `packages/website/`) are the highest-fidelity references for any specific pattern. The `foldkit-skills` plugin's `generate-program` and `audit-program` skills carry written snapshot guides if you want a structured walkthrough.
 
 <!-- END upstream Foldkit conventions -->
