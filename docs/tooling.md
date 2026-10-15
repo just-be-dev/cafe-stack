@@ -31,7 +31,7 @@ Effect 4 is a stable release; older guides that call it a pre-release are out of
 - `vite.config.ts`: the `foldkit()` and Tailwind plugins, UI entry optimization, the `@/` alias, Effect/Foldkit deduplication, and a watch exclusion for `.alchemy/`. Alchemy adds its Cloudflare integration on top for dev and deploy. `mise run build` checks the UI bundle locally.
 - `oxlint.config.ts`: loads the Effect and Foldkit plugins, turns on three Effect error rules everywhere, and applies Foldkit's architecture rules to `src/ui/**/*.ts`.
 - `components.json`: foldcn registry and UI aliases for the shadcn CLI, pointing at `src/ui/styles.css`.
-- `.mcp.json` and `.amp/settings.json`: run the `@foldkit/devtools-mcp` server with Bun. Amp reads `amp.mcpServers`; other clients read `.mcp.json`. The tools inspect a running app's Model and Messages and support time travel during local development.
+- `.mcp.json`: runs the `@foldkit/devtools-mcp` server with Bun. The tools inspect a running app's Model and Messages and support time travel during local development.
 - `public/_headers`: CSP and `nosniff` for static assets. Fonts and scripts are same-origin.
 - `src/ui/AGENTS.md`: Foldkit conventions for this release and the steps to refresh them after an upgrade.
 - `src/platform/boundary.test.ts`: the backend dependency-direction check.

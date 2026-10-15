@@ -1,8 +1,0 @@
-{
-  "amp.mcpServers": {
-    "foldkit-devtools": {
-      "command": "bun",
-      "args": ["run", "./node_modules/@foldkit/devtools-mcp/dist/server.js"]
-    }
-  }
-}
