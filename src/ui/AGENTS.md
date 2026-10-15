@@ -24,7 +24,7 @@ The app follows [Foldkit's project organization](https://foldkit.dev/patterns/pr
 
 The UI uses Tailwind CSS v4 and [foldcn](https://foldcn.elianiva.com), a shadcn-style registry of copy-paste Foldkit components. Agent docs are at https://foldcn.elianiva.com/llms.txt, and every page has a Markdown version at `/docs/<name>.md`.
 
-- Components live in `src/ui/components/ui/`: badge, bubble, button, empty, input, message, and textarea. `cn` is in `src/ui/lib/utils.ts`. Import through the `@/` alias, which maps to `src/ui/` in `tsconfig.json` and `vite.config.ts`. The project owns these copies, so edit them freely.
+- Components live in `src/ui/components/ui/`: badge, bubble, button, empty, input, message, textarea, and a local port of shadcn's Trace. Trace uses controlled `@foldkit/ui` Disclosure helpers; its usage is in README.md. `cn` is in `src/ui/lib/utils.ts`. Import through the `@/` alias, which maps to `src/ui/` in `tsconfig.json` and `vite.config.ts`. The project owns these copies, so edit them freely.
 - Add a component with `mise run ui:add <name>`; `components.json` already registers the namespace. Review the diff afterwards, since the CLI may also touch `src/ui/styles.css` or `package.json`.
 - Never install the `@foldcn/foldcn` base item. Its dependency pins can conflict with the exact versions here. The theme mapping the components need is already in `src/ui/styles.css`.
 - Theme tokens live in `src/ui/styles.css`. Use semantic tokens like `bg-card` and `text-muted-foreground` instead of raw colors. For a saved theme, keep the system preference and an explicit `data-theme` in sync across Tailwind's dark variant, boot Flags, the persistence Command, and a same-origin pre-paint script.
