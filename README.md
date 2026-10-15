@@ -28,8 +28,7 @@ src/
     main.ts                      Model, Messages, init, update, view
     styles.css                   light/dark Tailwind theme
     components/ui/               foldcn badge, bubble, button, empty,
-                                 input, message, and textarea;
-                                 local shadcn Trace port
+                                 input, message, and textarea
     lib/utils.ts                 `cn` class helper
     story.test.ts / scene.test.ts  update and view tests
     AGENTS.md                    Foldkit conventions
@@ -59,60 +58,6 @@ Both Workers are public. The API answers on its workers.dev URL and through the 
 Both Workers persist invocation logs and traces with a sampling rate of `1`, so every request is recorded. The API also provides `Cloudflare.Telemetry({ headSamplingRate: 1, persist: true })`, which exports the `Api.request` span and any `Effect.withSpan` or `Effect.fn` spans to Cloudflare.
 
 After a deploy, request `/api/health` and open **Workers & Pages → App / Api → Observability**. Lower the sampling rates in `stack.ts` and `api.ts` once traffic grows. The [Cloudflare guide](docs/cloudflare.md) has the details.
-
-## Trace UI
-
-`src/ui/components/ui/trace.ts` ports [shadcn's Base UI Trace](https://ui.shadcn.com/docs/components/base/trace) with base-nova styling into foldcn-style builders. Import `Trace` from `@/components/ui/trace`. The container and its `line`, `icon`, `title`, and `description` parts take `(config, children, h)`. Every part accepts `className` and extra `attributes`. Lines accept `status: "running" | "error" | "pending"`; omit it for completed work. Running titles shimmer, respecting reduced motion.
-
-```ts
-Trace(
-  {},
-  [
-    Trace.line(
-      { status: "running" },
-      [Trace.title({}, ["Running build"], h), Trace.description({}, ["3s"], h)],
-      h,
-    ),
-    Trace.collapsible(
-      {
-        id: "build-output",
-        isOpen: model.isBuildOutputOpen,
-        onToggle: (isOpen) => Message.ToggledBuildOutput({ isOpen }),
-      },
-      {
-        trigger: [Trace.line({}, [Trace.title({}, ["Ran typecheck"], h)], h)],
-        content: [h.pre([], ["No type errors."])],
-      },
-      h,
-    ),
-  ],
-  h,
-);
-```
-
-Store `isBuildOutputOpen: Schema.Boolean` in the parent Model and handle `ToggledBuildOutput` in its update. Use a unique, stable `id` for each disclosure. Initialize the field to `true` for an initially open row; external updates can change the same field. The default removes closed content immediately. `keepMounted: true` retains closed content with native `hidden` and `inert` attributes, without animation. `isAnimated: true` uses Foldkit's animated panel, which stays mounted for height transitions and becomes inert and hidden from assistive technology while closed. Animation requires retention, so `isAnimated` takes precedence over `keepMounted`. Both options default to `false`. Nested state stays in the parent Model in every mode.
-
-`Trace.collapsible` also accepts `isDisabled`, `ariaLabel`, `ariaLabelledBy`, `triggerClass`, and `contentClass`. For custom layouts, `Trace.collapsibleTrigger` and `Trace.collapsibleContent` require a `disclosure` config field from `@foldkit/ui`'s `Disclosure.view`; each builder applies the appropriate attribute bundle. Render custom content conditionally on `isOpen`, or wrap it in `disclosure.animatePanel` and keep it mounted. For example, inside `Disclosure.view`:
-
-```ts
-toView: (disclosure) =>
-  Trace(
-    {},
-    [
-      Trace.collapsibleTrigger(
-        { disclosure },
-        [Trace.line({}, [Trace.title({}, ["Ran typecheck"], h)], h)],
-        h,
-      ),
-      model.isBuildOutputOpen
-        ? Trace.collapsibleContent({ disclosure }, ["No type errors."], h)
-        : h.empty,
-    ],
-    h,
-  );
-```
-
-Wrap a line in an anchor or another component's trigger to give it link or dialog behavior. Icons are decorative; describe running and failed states in the title too.
 
 ## Docs
 
