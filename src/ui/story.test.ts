@@ -1,8 +1,8 @@
-import { expect, test } from "bun:test";
+import { expect, it } from "@effect/vitest";
 import { given, message, model, story } from "foldkit/story";
 import { init, Message, update } from "./main.ts";
 
-test("increments compose and reset returns to zero", () => {
+it("increments compose and reset returns to zero", () => {
   story(
     update,
     given(init().model),

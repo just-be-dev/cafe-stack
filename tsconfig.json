@@ -23,14 +23,27 @@
               "src/ui/api.ts",
               "src/ui/**/command.ts",
               "src/api.ts",
-              "src/api.test.ts",
               "src/platform/cloudflare/api.ts"
             ],
             "options": { "allowedUnstableApis": ["effect/http"] }
+          },
+          {
+            "include": ["src/**/*.test.ts"],
+            "options": { "allowedUnstableApis": ["@effect/vitest"] }
+          },
+          {
+            "include": ["src/api.test.ts"],
+            "options": { "allowedUnstableApis": ["effect/http", "@effect/vitest"] }
           }
         ]
       }
     ]
   },
-  "include": ["src/**/*.ts", "alchemy.run.ts", "oxlint.config.ts", "vite.config.ts"]
+  "include": [
+    "src/**/*.ts",
+    "alchemy.run.ts",
+    "oxlint.config.ts",
+    "vite.config.ts",
+    "vitest.config.ts"
+  ]
 }

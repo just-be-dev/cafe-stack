@@ -1,4 +1,4 @@
-import { test } from "bun:test";
+import { it } from "@effect/vitest";
 import { Disclosure } from "@foldkit/ui";
 import * as Schema from "effect/Schema";
 import type { HtmlBuilder } from "foldkit/html";
@@ -105,7 +105,7 @@ const view = (model: Model, h: HtmlBuilder<Message>) =>
     h,
   );
 
-test("trace lines are text; links and disclosure triggers own their semantics", () => {
+it("trace lines are text; links and disclosure triggers own their semantics", () => {
   scene(
     { update, view },
     given(initialModel),
@@ -133,7 +133,7 @@ test("trace lines are text; links and disclosure triggers own their semantics", 
   );
 });
 
-test("disabled disclosure removes pointer and keyboard activation handlers", () => {
+it("disabled disclosure removes pointer and keyboard activation handlers", () => {
   scene(
     { update, view },
     given(modifyFields(initialModel, { isDisabled: () => true })),
@@ -145,7 +145,7 @@ test("disabled disclosure removes pointer and keyboard activation handlers", () 
   );
 });
 
-test("kept panels are inert while closed and retain nested state across toggles", () => {
+it("kept panels are inert while closed and retain nested state across toggles", () => {
   scene(
     { update, view },
     given(modifyFields(initialModel, { keepMounted: () => true })),
@@ -164,7 +164,7 @@ test("kept panels are inert while closed and retain nested state across toggles"
   );
 });
 
-test("animated panels remain mounted and inert independently of keepMounted", () => {
+it("animated panels remain mounted and inert independently of keepMounted", () => {
   scene(
     { update, view },
     given(modifyFields(initialModel, { isAnimated: () => true })),
@@ -202,7 +202,7 @@ const customView = (model: Model, h: HtmlBuilder<Message>) =>
     h,
   );
 
-test("custom layouts receive disclosure semantics through required bundles", () => {
+it("custom layouts receive disclosure semantics through required bundles", () => {
   scene(
     { update, view: customView },
     given(initialModel),

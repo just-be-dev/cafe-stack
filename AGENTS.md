@@ -47,7 +47,7 @@ mise run check
 ```
 
 - Run `mise run build` for UI or build changes. It's a local check, not a deploy.
-- Tests use `bun:test` next to the code they cover. Run Effects with `Effect.runSync` or `Effect.runPromise`.
+- Tests use Vitest with imports from `@effect/vitest` next to the code they cover. Use `it.effect` for Effect tests with automatic scoping and test services, `it.live` when real time is required, and plain `it` for synchronous or Promise tests.
 - Use memory services for application tests. Native Worker, Durable Object, D1, identity, and AI behavior needs local end-to-end checks with `mise run dev` and the URL it prints.
 - Test both sides of boundaries, plus failure, retry, and concurrency cases that would catch a plausible bug. Memory tests don't prove native transactional guarantees.
 - UI tests use Foldkit Story and Scene. Render and look at affected visual states before calling visual changes done; DOM and accessibility checks are enough for interaction-only changes.

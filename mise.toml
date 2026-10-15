@@ -27,6 +27,9 @@ run = "bun run format:check"
 [tasks.test]
 run = "bun run test"
 
+[tasks."test:watch"]
+run = "bun run test:watch"
+
 [tasks.build]
 run = "bun run build"
 
@@ -64,3 +67,4 @@ run = 'bun patch --commit "node_modules/${usage_package}"'
 
 [tools]
 bun = "1.4.3"
+node = "24.18.1"

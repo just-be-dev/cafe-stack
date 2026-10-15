@@ -4,7 +4,8 @@ Every dependency in `package.json` is pinned to an exact version, and `bun.lock`
 
 | Tool / package group                 | Role                                                       |
 | ------------------------------------ | ---------------------------------------------------------- |
-| Bun / mise                           | Runtime, package manager, tests, tools and tasks           |
+| Bun / mise                           | Runtime, package manager, tools and tasks                  |
+| Node.js / Vitest / @effect/vitest    | Test runtime, runner, and scoped Effect testing            |
 | TypeScript 7                         | Strict native compiler via `tsc --noEmit`                  |
 | Effect 4 + browser/Bun platforms     | Schemas, services, errors, concurrency, platform runtime   |
 | Effect language service / tsgo patch | Editor diagnostics and the patched native compiler         |
@@ -22,11 +23,11 @@ Effect 4 is a stable release; older guides that call it a pre-release are out of
 
 ## Config files
 
-- `mise.toml`: pins Bun, turns on experimental settings and pinning, adds `node_modules/.bin` to PATH, and installs the dependencies locked in `bun.lock` after tools install, so `mise install` is the only setup step. Each package script has a matching mise task, and `mise tasks` lists them all. Change tool versions with `mise use bun@<version>`.
-- `bunfig.toml`: limits test discovery to `./src`.
+- `mise.toml`: pins Bun and Node.js, turns on experimental settings and pinning, adds `node_modules/.bin` to PATH, and installs the dependencies locked in `bun.lock` after tools install, so `mise install` is the only setup step. Each package script has a matching mise task, and `mise tasks` lists them all. Change tool versions with `mise use bun@<version>` or `mise use node@<version>`.
+- `vitest.config.ts`: discovers `src/**/*.test.ts` in the Node.js environment, with the UI `@/` alias and Effect/Foldkit deduplication. This separate config keeps the app's Vite plugins and DevTools relay out of test runs. Tests import helpers from `@effect/vitest`; Effect tests use `it.effect` for test services and automatic scope cleanup.
 - `package.json`: ESM, `private: true`, scripts, exact pins, the Effect/platform and workerd overrides, and Bun patch mappings.
 - `tsconfig.json`: strict mode, `noUncheckedIndexedAccess`, bundler resolution, preserved modules, `verbatimModuleSyntax`, and the Effect language-service plugin. Browser, Worker, and Bun types are all loaded; the boundary test keeps native globals out of backend domains.
-- Language-service overrides allow the unstable `effect/http` module only in HTTP, UI command, and platform API files. `effect-oxlint` is allowed as a duplicate Effect consumer. Add narrow per-file exceptions for other unstable APIs as you use them.
+- Language-service overrides allow the unstable `effect/http` module only in HTTP, UI command, and platform API files, and `@effect/vitest` only in test files. The HTTP test permits both. `effect-oxlint` is allowed as a duplicate Effect consumer. Add narrow per-file exceptions for other unstable APIs as you use them.
 - `vite.config.ts`: the `foldkit()` and Tailwind plugins, UI entry optimization, the `@/` alias, Effect/Foldkit deduplication, and a watch exclusion for `.alchemy/`. Alchemy adds its Cloudflare integration on top for dev and deploy. `mise run build` checks the UI bundle locally.
 - `oxlint.config.ts`: loads the Effect and Foldkit plugins, turns on three Effect error rules everywhere, and applies Foldkit's architecture rules to `src/ui/**/*.ts`.
 - `components.json`: foldcn registry and UI aliases for the shadcn CLI, pointing at `src/ui/styles.css`.
@@ -45,6 +46,7 @@ Run these from the repo root:
 ```sh
 mise trust && mise install
 mise run check   # typecheck, lint, test, format:check
+mise run test:watch
 mise run build
 mise run dev
 ```
@@ -58,6 +60,8 @@ Under `alchemy dev`, Cloudflare's Vite upgrade listener interferes with Foldkit'
 Edit patches with `mise run patch <package>` and `mise run patch:commit <package>`, and document the symptom, cause, fix, and when to remove it. After an upgrade, check whether each patch is still needed and run a browser-connected DevTools session under `alchemy dev`; a clean install doesn't prove the relay is stable. Keep the relay on loopback with its token.
 
 Effect and its platform packages are aligned at `4.0.4` through exact overrides. Foldkit `0.168.0`, its tools, and the Effect lint wrapper still declare `4.0.0` dependencies or peers; the overrides keep one Effect instance and matching platform APIs. Recheck these overrides against upstream declarations on every upgrade and verify the native Workers and browser runtime together.
+
+`@effect/vitest` is pinned at `4.0.4` to match Effect, with Vitest `5.0.4` satisfying its peer dependency. Use the stable package versions here rather than the older beta installation command in the Effect Solutions guide. Bun still installs dependencies and runs project scripts; Vitest runs the tests on the pinned Node.js runtime.
 
 Agents' required MCP peers (`@modelcontextprotocol/client`, `@modelcontextprotocol/server`, and `@modelcontextprotocol/sdk`) are explicit exact dependencies. Foldkit DevTools keeps its own SDK version, as required by its package.
 

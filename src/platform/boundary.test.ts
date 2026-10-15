@@ -1,12 +1,14 @@
-import { expect, test } from "bun:test";
+import { expect, it } from "@effect/vitest";
+import { glob, readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-test("backend domains don't depend on platform adapters, SDKs, or Cloudflare globals", async () => {
-  const src = resolve(import.meta.dir, "..");
+it("backend domains don't depend on platform adapters, SDKs, or Cloudflare globals", async () => {
+  const src = resolve(dirname(fileURLToPath(import.meta.url)), "..");
   const violations: Array<string> = [];
-  for await (const path of new Bun.Glob("**/*.ts").scan(src)) {
+  for await (const path of glob("**/*.ts", { cwd: src })) {
     if (path.startsWith("ui/") || path.startsWith("platform/")) continue;
-    const source = await Bun.file(resolve(src, path)).text();
+    const source = await readFile(resolve(src, path), "utf8");
     // Include type-only imports and re-exports, which don't appear in a runtime import scan.
     for (const match of source.matchAll(/\b(?:from\s*|import\s*(?:\(\s*)?)["']([^"']+)["']/g)) {
       const specifier = match[1];
