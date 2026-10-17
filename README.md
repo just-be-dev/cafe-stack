@@ -53,6 +53,22 @@ Set up a Cloudflare profile with `mise run cloudflare:profile`, or point `ALCHEM
 
 Both Workers are public. The API answers on its workers.dev URL and through the Website's service binding, so any authentication you add has to cover both.
 
+### Environment variables
+
+All of these are optional. With none set, the stack is named `project-starter`, the app is served from `/`, and there are no custom routes.
+
+| Variable       | Effect                                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------------------ |
+| `PROJECT_NAME` | Names the Alchemy stack. Alchemy keys state and resource names by stack, so give each project its own. |
+| `BASE_PATH`    | Serves the app under a path prefix such as `/<project>/`. It must start and end with `/`.              |
+| `STAGE`        | Set to `prod` to enable the route below.                                                               |
+| `PROJECT_HOST` | Host for the prod route, such as `apps.example.com`.                                                   |
+| `PROJECT_ZONE` | Cloudflare zone that owns that host, such as `example.com`.                                            |
+
+When `STAGE=prod` and `PROJECT_NAME`, `PROJECT_HOST`, and `PROJECT_ZONE` are all set, the Website is routed at `<host>/<project>/*`, and the stack returns `https://<host>/<project>/` as its URL.
+
+Under a base path, UI code must build URLs from `import.meta.env.BASE_URL`, not absolute `/` paths.
+
 ## Telemetry
 
 Both Workers persist invocation logs and traces with a sampling rate of `1`, so every request is recorded. The API also provides `Cloudflare.Telemetry({ headSamplingRate: 1, persist: true })`, which exports the `Api.request` span and any `Effect.withSpan` or `Effect.fn` spans to Cloudflare.

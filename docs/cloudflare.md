@@ -58,11 +58,9 @@ To deploy, add a Cloudflare profile with `mise run cloudflare:profile` or select
 
 ## Deploy settings
 
-`stack.ts` reads optional environment variables at plan time. With none set, the stack is `project-starter`, served from `/`.
+`stack.ts` reads optional environment variables at plan time with Effect `Config`. The [README](../README.md#environment-variables) lists them.
 
-- `PROJECT_NAME` names the stack. Alchemy keys state and resource names by stack, so separate projects need separate names.
-- `BASE_PATH` serves the app under a prefix such as `/<project>/`. It sets Vite's `base` and the `runWorkerFirst` pattern, and `edge.ts` strips it before forwarding. UI code must build URLs from `import.meta.env.BASE_URL`, not absolute `/` paths.
-- With `STAGE=prod`, `PROJECT_NAME`, `PROJECT_HOST`, and `PROJECT_ZONE` set, the Website is routed at `<host>/<project>/*` and the stack returns that URL.
+`BASE_PATH` sets Vite's `base` and the `runWorkerFirst` pattern, and `edge.ts` strips it before forwarding, so `/<project>/api/health` reaches the API as `/api/health`.
 
 ## Identity and authorization
 
