@@ -2,7 +2,7 @@
 
 A runnable starter. Read `README.md` and `docs/`, replace the sample service and UI, and add the product's own layout, API, and invariants.
 
-`src/model.ts` and `src/service.ts` hold the sample Schema and service. `src/api.ts` defines the health route. `src/platform/cloudflare/{stack,api,edge}.ts` declare resources, host the API, and forward Website requests. `src/platform/cloudflare/project.ts` reads the projects.just-be.dev deploy settings. `src/ui/entry.ts` boots the counter defined in `src/ui/main.ts`. D1, Durable Objects, and AI can be added when the product needs them.
+`src/model.ts` and `src/service.ts` hold the sample Schema and service. `src/api.ts` defines the health route. `src/platform/cloudflare/{stack,api,edge}.ts` declare resources, host the API, and forward Website requests. `src/platform/cloudflare/project.ts` reads optional deploy settings from the environment. `src/ui/entry.ts` boots the counter defined in `src/ui/main.ts`. D1, Durable Objects, and AI can be added when the product needs them.
 
 ## Ownership and scope
 

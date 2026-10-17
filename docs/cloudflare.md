@@ -56,15 +56,13 @@ Run `mise run dev` from the repo root and use the Website URL it prints; the por
 
 To deploy, add a Cloudflare profile with `mise run cloudflare:profile` or select one with `ALCHEMY_PROFILE`. The first deploy may offer to create Alchemy's Cloudflare-hosted state store. That changes shared infrastructure, so get approval first.
 
-## projects.just-be.dev
+## Deploy settings
 
-`src/platform/cloudflare/project.ts` reads the variables set by the projects.just-be.dev runner. The [README](../README.md#deploying-with-projectsjust-bedev) lists them.
+`src/platform/cloudflare/project.ts` reads optional environment variables at plan time. With none set, the stack is `project-starter`, served from `/`.
 
-- `PROJECT_NAME` names the stack. Alchemy keys state and prefixes resource names by stack, so each project gets its own. Without it, every project from this template would share `project-starter` state and overwrite each other.
-- `BASE_PATH` sets Vite's `base`, the Website's `BASE_PATH` binding, and the `runWorkerFirst` pattern. `edge.ts` strips it before forwarding, so `/<project>/api/health` reaches the API as `/api/health`.
-- With `STAGE=prod` and `PROJECT_NAME` set, the Website gets a route `<host>/<project>/*` on the zone, and the stack returns `https://<host>/<project>/` as its `url`.
-
-Unset variables keep the defaults: stack `project-starter`, base `/`, no routes, and the Website's own URL. UI code must build URLs from `import.meta.env.BASE_URL` so it works under `/<project>/`.
+- `PROJECT_NAME` names the stack. Alchemy keys state and resource names by stack, so separate projects need separate names.
+- `BASE_PATH` serves the app under a prefix such as `/<project>/`. It sets Vite's `base` and the `runWorkerFirst` pattern, and `edge.ts` strips it before forwarding. UI code must build URLs from `import.meta.env.BASE_URL`, not absolute `/` paths.
+- With `STAGE=prod`, `PROJECT_NAME`, `PROJECTS_HOST`, and `PROJECTS_ZONE` set, the Website is routed at `<host>/<project>/*` and the stack returns that URL.
 
 ## Identity and authorization
 
