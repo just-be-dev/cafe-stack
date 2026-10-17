@@ -23,7 +23,6 @@ src/
   platform/
     boundary.test.ts             keeps platform imports out of domain code
     cloudflare/{stack,api,edge}.ts  resources, API Worker, forwarding edge
-    cloudflare/project.ts        optional deploy settings
   ui/
     entry.ts                     runtime boot
     main.ts                      Model, Messages, init, update, view
@@ -41,7 +40,7 @@ Root files configure Bun, mise, Node.js, TypeScript, Vite, Vitest with `@effect/
 
 1. Click **Use this template → Create a new repository** and pick the new repository's visibility.
 2. Decide on the product's domain names, who owns which data, how users authenticate, and whether you need D1, Durable Objects, or AI.
-3. Rename things: `name` in `package.json`, the `project-starter` stack name in `src/platform/cloudflare/project.ts`, the app name in `src/platform/cloudflare/api.ts`, and the page title and content in `index.html` and `src/ui/`. Resource names stick once deployed, so settle them before the first deploy.
+3. Rename things: `name` in `package.json`, the `project-starter` stack name in `src/platform/cloudflare/stack.ts`, the app name in `src/platform/cloudflare/api.ts`, and the page title and content in `index.html` and `src/ui/`. Resource names stick once deployed, so settle them before the first deploy.
 4. Run `mise trust && mise install`. It installs Bun, Node.js for Vitest, and the locked dependencies. Commit `bun.lock`. Read the [tooling guide](docs/tooling.md) before upgrading dependencies.
 5. Replace the sample service and counter with your first real feature. Keep Cloudflare code in `src/platform/cloudflare/` and runtime boot in `src/ui/entry.ts`.
 6. Add your product's invariants to `AGENTS.md`, rewrite this README, and run the [checks](docs/guardrails.md).

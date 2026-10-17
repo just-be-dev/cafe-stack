@@ -58,7 +58,7 @@ To deploy, add a Cloudflare profile with `mise run cloudflare:profile` or select
 
 ## Deploy settings
 
-`src/platform/cloudflare/project.ts` reads optional environment variables at plan time. With none set, the stack is `project-starter`, served from `/`.
+`stack.ts` reads optional environment variables at plan time. With none set, the stack is `project-starter`, served from `/`.
 
 - `PROJECT_NAME` names the stack. Alchemy keys state and resource names by stack, so separate projects need separate names.
 - `BASE_PATH` serves the app under a prefix such as `/<project>/`. It sets Vite's `base` and the `runWorkerFirst` pattern, and `edge.ts` strips it before forwarding. UI code must build URLs from `import.meta.env.BASE_URL`, not absolute `/` paths.
