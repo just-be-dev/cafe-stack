@@ -1,3 +1,19 @@
+import * as Config from "effect/Config";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
+
+/** A path prefix with leading and trailing slashes, like `/` or `/my-app/`. */
+const BasePath = Schema.String.check(
+  Schema.isPattern(/^\/(?:.*\/)?$/, { message: "BASE_PATH must start and end with /" }),
+);
+
+/** An optional variable; blank counts as unset. */
+const optional = (name: string) =>
+  Config.option(Config.String(name)).pipe(
+    Config.map(Option.map((value) => value.trim())),
+    Config.map(Option.filter((value) => value.length > 0)),
+  );
+
 /**
  * Optional deploy settings, read at plan time. With none set, the stack is
  * `project-starter`, served from `/`, with no custom routes.
@@ -7,25 +23,22 @@
  * - STAGE, PROJECTS_HOST, PROJECTS_ZONE  with STAGE=prod and PROJECT_NAME set,
  *                 route `<host>/<project>/*` on the zone.
  */
-const env = (name: string) =>
-  (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.[
-    name
-  ]?.trim() || undefined;
-
-const project = env("PROJECT_NAME");
-const host = env("PROJECTS_HOST");
-const zone = env("PROJECTS_ZONE");
-
-export const stackName = project ?? "project-starter";
-
-/** Where the app is served from, always with a trailing slash. */
-export const basePath = env("BASE_PATH") ?? "/";
-
-/** The prod route and its URL, when every setting it needs is present. */
-export const prodRoute =
-  env("STAGE") === "prod" && project !== undefined && host !== undefined && zone !== undefined
-    ? {
+export const DeployConfig = Config.all({
+  project: optional("PROJECT_NAME"),
+  basePath: Config.schema(BasePath, "BASE_PATH").pipe(Config.withDefault("/")),
+  stage: optional("STAGE"),
+  host: optional("PROJECTS_HOST"),
+  zone: optional("PROJECTS_ZONE"),
+}).pipe(
+  Config.map(({ project, basePath, stage, host, zone }) => ({
+    stackName: Option.getOrElse(project, () => "project-starter"),
+    basePath,
+    prodRoute: Option.all({ project, host, zone }).pipe(
+      Option.filter(() => Option.contains(stage, "prod")),
+      Option.map(({ project, host, zone }) => ({
         routes: [{ pattern: `${host}/${project}/*`, zoneName: zone }],
         url: `https://${host}/${project}/`,
-      }
-    : undefined;
+      })),
+    ),
+  })),
+);
