@@ -3,11 +3,15 @@ import * as Cloudflare from "alchemy/Cloudflare";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import Api from "./api.ts";
+import { basePath, prodRoute, stackName } from "./project.ts";
 
 export const App = Cloudflare.Website.Foldkit("App", {
   main: "src/platform/cloudflare/edge.ts",
-  env: { API: Api },
-  assets: { runWorkerFirst: ["/api/*"] },
+  env: { API: Api, BASE_PATH: basePath },
+  // Static assets are matched against the full path, so API calls are
+  // `<base>api/*` (`/api/*` unless deployed under a project path).
+  assets: { runWorkerFirst: [`${basePath}api/*`] },
+  ...(prodRoute === undefined ? {} : { routes: prodRoute.routes }),
   compatibility: { date: "2026-10-04" },
   observability: {
     enabled: true,
@@ -25,12 +29,14 @@ const state = Layer.unwrap(
   }),
 );
 
+// The stack name keys Alchemy state and prefixes resource names; projects get
+// their own (see project.ts).
 export default Alchemy.Stack(
-  "project-starter",
+  stackName,
   { providers: Cloudflare.providers(), state },
   Effect.gen(function* () {
     yield* Api;
     const app = yield* App;
-    return { url: app.url };
+    return { url: prodRoute?.url ?? app.url };
   }),
 );

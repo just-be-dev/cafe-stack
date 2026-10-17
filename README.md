@@ -23,6 +23,7 @@ src/
   platform/
     boundary.test.ts             keeps platform imports out of domain code
     cloudflare/{stack,api,edge}.ts  resources, API Worker, forwarding edge
+    cloudflare/project.ts        projects.just-be.dev deploy settings
   ui/
     entry.ts                     runtime boot
     main.ts                      Model, Messages, init, update, view
@@ -40,7 +41,7 @@ Root files configure Bun, mise, Node.js, TypeScript, Vite, Vitest with `@effect/
 
 1. Click **Use this template → Create a new repository** and pick the new repository's visibility.
 2. Decide on the product's domain names, who owns which data, how users authenticate, and whether you need D1, Durable Objects, or AI.
-3. Rename things: `name` in `package.json`, the `project-starter` stack in `src/platform/cloudflare/stack.ts`, the app name in `src/platform/cloudflare/api.ts`, and the page title and content in `index.html` and `src/ui/`. Resource names stick once deployed, so settle them before the first deploy.
+3. Rename things: `name` in `package.json`, the `project-starter` stack name in `src/platform/cloudflare/project.ts`, the app name in `src/platform/cloudflare/api.ts`, and the page title and content in `index.html` and `src/ui/`. Resource names stick once deployed, so settle them before the first deploy.
 4. Run `mise trust && mise install`. It installs Bun, Node.js for Vitest, and the locked dependencies. Commit `bun.lock`. Read the [tooling guide](docs/tooling.md) before upgrading dependencies.
 5. Replace the sample service and counter with your first real feature. Keep Cloudflare code in `src/platform/cloudflare/` and runtime boot in `src/ui/entry.ts`.
 6. Add your product's invariants to `AGENTS.md`, rewrite this README, and run the [checks](docs/guardrails.md).
@@ -52,6 +53,22 @@ A prompt for an agent: "Read AGENTS.md and docs/. Adapt this starter for an appl
 Set up a Cloudflare profile with `mise run cloudflare:profile`, or point `ALCHEMY_PROFILE` at an existing one. `mise run deploy` deploys the `prod` stage. The first deploy may offer to create Cloudflare-hosted Alchemy state.
 
 Both Workers are public. The API answers on its workers.dev URL and through the Website's service binding, so any authentication you add has to cover both.
+
+## Deploying with projects.just-be.dev
+
+projects.just-be.dev deploys a repository made from this template with `bunx alchemy deploy --stage <stage> --yes --no-input`. Its runner sets these variables, and `src/platform/cloudflare/project.ts` reads them:
+
+| Variable        | Value                                                          |
+| --------------- | -------------------------------------------------------------- |
+| `PROJECT_NAME`  | The repository name. It names the Alchemy stack and its state. |
+| `STAGE`         | `prod` for main, `b-<slug>-<hash>` for other branches.         |
+| `BASE_PATH`     | `/<project>/` in prod, `/` for previews on workers.dev.        |
+| `PROJECTS_HOST` | Prod host. Defaults to `projects.just-be.dev`.                 |
+| `PROJECTS_ZONE` | Prod zone. Defaults to `just-be.dev`.                          |
+
+In prod the Website is routed at `https://<host>/<project>/`, and the stack returns that as its `url`. Previews return their workers.dev URL. When none of the variables are set, as with `mise run dev` and `mise run deploy`, the stack is still `project-starter` and the app is served from `/`.
+
+Under `/<project>/`, the edge strips the base path before forwarding to the API, so routes keep their `/api/...` paths. UI code has to use base-relative URLs. Build them from `import.meta.env.BASE_URL`, not absolute `/` paths, or they will miss the project prefix.
 
 ## Telemetry
 

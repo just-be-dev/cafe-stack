@@ -9,7 +9,7 @@ Browser / client
           │
           ▼
 Website (Cloudflare.Website.Foldkit) ── static assets
-          │ /api/*, runWorkerFirst
+          │ <base>api/*, runWorkerFirst
           ▼
 edge.ts ── service binding ── Api Worker ◀── direct client (workers.dev)
                                    │
@@ -17,7 +17,7 @@ edge.ts ── service binding ── Api Worker ◀── direct client (worker
                                    └── D1 / Durable Objects / AI, when added
 ```
 
-The Website is a `Cloudflare.Website.Foldkit` with `env: { API: Api }` and `assets.runWorkerFirst: ["/api/*"]`. The API is a `Cloudflare.Worker` that keeps Alchemy's default `workersDev: true`, which gives it a stable workers.dev URL and per-version preview URLs. `edge.ts` gets its env type from `Cloudflare.InferEnv<typeof App>` and only forwards requests to the binding. Routing and business logic live in the API.
+The Website is a `Cloudflare.Website.Foldkit` with `env: { API: Api, BASE_PATH }` and `assets.runWorkerFirst: ["<base>api/*"]`, where the base path is `/` unless the app is deployed under a project path. The API is a `Cloudflare.Worker` that keeps Alchemy's default `workersDev: true`, which gives it a stable workers.dev URL and per-version preview URLs. `edge.ts` gets its env type from `Cloudflare.InferEnv<typeof App>` and only forwards requests to the binding, stripping the base path first. Routing and business logic live in the API.
 
 Both Workers are public. When the product needs protected operations, enforce authentication and authorization in the API, since requests can arrive directly or through the Website.
 
@@ -55,6 +55,16 @@ A D1 adapter can grab its database binding in the outer Effect and return a laye
 Run `mise run dev` from the repo root and use the Website URL it prints; the port isn't fixed. Workers AI calls are real remote requests even in local dev and need credentials.
 
 To deploy, add a Cloudflare profile with `mise run cloudflare:profile` or select one with `ALCHEMY_PROFILE`. The first deploy may offer to create Alchemy's Cloudflare-hosted state store. That changes shared infrastructure, so get approval first.
+
+## projects.just-be.dev
+
+`src/platform/cloudflare/project.ts` reads the variables set by the projects.just-be.dev runner. The [README](../README.md#deploying-with-projectsjust-bedev) lists them.
+
+- `PROJECT_NAME` names the stack. Alchemy keys state and prefixes resource names by stack, so each project gets its own. Without it, every project from this template would share `project-starter` state and overwrite each other.
+- `BASE_PATH` sets Vite's `base`, the Website's `BASE_PATH` binding, and the `runWorkerFirst` pattern. `edge.ts` strips it before forwarding, so `/<project>/api/health` reaches the API as `/api/health`.
+- With `STAGE=prod` and `PROJECT_NAME` set, the Website gets a route `<host>/<project>/*` on the zone, and the stack returns `https://<host>/<project>/` as its `url`.
+
+Unset variables keep the defaults: stack `project-starter`, base `/`, no routes, and the Website's own URL. UI code must build URLs from `import.meta.env.BASE_URL` so it works under `/<project>/`.
 
 ## Identity and authorization
 
