@@ -25,15 +25,15 @@ const optional = (name: string) =>
  *
  * - PROJECT_NAME  names the stack, so each project keeps its own Alchemy state.
  * - BASE_PATH     serves the app under a path prefix, e.g. `/<project>/`.
- * - STAGE, PROJECTS_HOST, PROJECTS_ZONE  with STAGE=prod and PROJECT_NAME set,
+ * - STAGE, PROJECT_HOST, PROJECT_ZONE  with STAGE=prod and PROJECT_NAME set,
  *                 route `<host>/<project>/*` on the zone.
  */
 export const DeployConfig = Config.all({
   project: optional("PROJECT_NAME"),
   basePath: Config.schema(BasePath, "BASE_PATH").pipe(Config.withDefault("/")),
   stage: optional("STAGE"),
-  host: optional("PROJECTS_HOST"),
-  zone: optional("PROJECTS_ZONE"),
+  host: optional("PROJECT_HOST"),
+  zone: optional("PROJECT_ZONE"),
 }).pipe(
   Config.map(({ project, basePath, stage, host, zone }) => ({
     stackName: Option.getOrElse(project, () => "project-starter"),

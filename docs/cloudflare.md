@@ -62,7 +62,7 @@ To deploy, add a Cloudflare profile with `mise run cloudflare:profile` or select
 
 - `PROJECT_NAME` names the stack. Alchemy keys state and resource names by stack, so separate projects need separate names.
 - `BASE_PATH` serves the app under a prefix such as `/<project>/`. It sets Vite's `base` and the `runWorkerFirst` pattern, and `edge.ts` strips it before forwarding. UI code must build URLs from `import.meta.env.BASE_URL`, not absolute `/` paths.
-- With `STAGE=prod`, `PROJECT_NAME`, `PROJECTS_HOST`, and `PROJECTS_ZONE` set, the Website is routed at `<host>/<project>/*` and the stack returns that URL.
+- With `STAGE=prod`, `PROJECT_NAME`, `PROJECT_HOST`, and `PROJECT_ZONE` set, the Website is routed at `<host>/<project>/*` and the stack returns that URL.
 
 ## Identity and authorization
 

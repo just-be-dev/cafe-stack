@@ -10,8 +10,8 @@ const read = (env: Record<string, string>) => DeployConfig.parse(ConfigProvider.
 const platform = {
   PROJECT_NAME: "cafe",
   BASE_PATH: "/cafe/",
-  PROJECTS_HOST: "apps.example.com",
-  PROJECTS_ZONE: "example.com",
+  PROJECT_HOST: "apps.example.com",
+  PROJECT_ZONE: "example.com",
 };
 
 it.effect("defaults to the starter stack at / with no route", () =>
@@ -48,7 +48,7 @@ it.effect("skips the route for previews and when the host or zone is missing", (
   Effect.gen(function* () {
     const preview = yield* read({ ...platform, STAGE: "b-feature-1a2b" });
     expect(Option.isNone(preview.prodRoute)).toBe(true);
-    const { PROJECTS_ZONE: _, ...noZone } = platform;
+    const { PROJECT_ZONE: _, ...noZone } = platform;
     const missing = yield* read({ ...noZone, STAGE: "prod" });
     expect(Option.isNone(missing.prodRoute)).toBe(true);
   }),
