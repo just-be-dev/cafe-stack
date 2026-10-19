@@ -55,17 +55,17 @@ Both Workers are public. The API answers on its workers.dev URL and through the 
 
 ### Environment variables
 
-All of these are optional. With none set, the stack is named `project-starter`, the app is served from `/`, and there are no custom routes.
+All of these are optional. With none set, the stack is named `project-starter`, the app is served from `/`, and there is no custom domain.
 
 | Variable       | Effect                                                                                                 |
 | -------------- | ------------------------------------------------------------------------------------------------------ |
 | `PROJECT_NAME` | Names the Alchemy stack. Alchemy keys state and resource names by stack, so give each project its own. |
-| `BASE_PATH`    | Serves the app under a path prefix such as `/<project>/`. It must start and end with `/`.              |
-| `STAGE`        | Set to `prod` to enable the route below.                                                               |
-| `PROJECT_HOST` | Host for the prod route, such as `apps.example.com`.                                                   |
+| `BASE_PATH`    | Serves the app under a path prefix such as `/app/`. It must start and end with `/`.                    |
+| `STAGE`        | Set to `prod` to give prod the host below.                                                             |
+| `PROJECT_HOST` | The hostname prod claims, such as `cafe.example.com`.                                                  |
 | `PROJECT_ZONE` | Cloudflare zone that owns that host, such as `example.com`.                                            |
 
-When `STAGE=prod` and `PROJECT_NAME`, `PROJECT_HOST`, and `PROJECT_ZONE` are all set, the Website is routed at `<host>/<project>/*`, and the stack returns `https://<host>/<project>/` as its URL.
+When `STAGE=prod` and `PROJECT_HOST` and `PROJECT_ZONE` are both set, the Website claims `<host>` as a custom domain and routes `<host><base>*`, and the stack returns `https://<host><base>` as its URL. The route is there because routes outrank custom domains, so a zone-wide wildcard route would otherwise win. projects.just-be.dev sets `PROJECT_HOST` to `<project>.just-be.dev` and `BASE_PATH` to `/`.
 
 Under a base path, UI code must build URLs from `import.meta.env.BASE_URL`, not absolute `/` paths.
 
