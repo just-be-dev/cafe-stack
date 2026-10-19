@@ -17,7 +17,7 @@ edge.ts ── service binding ── Api Worker ◀── direct client (worker
                                    └── D1 / Durable Objects / AI, when added
 ```
 
-The Website is a `Cloudflare.Website.Foldkit` with `env: { API: Api, BASE_PATH }` and `assets.runWorkerFirst: ["<base>api/*"]`, where the base path is `/` unless the app is deployed under a project path. The API is a `Cloudflare.Worker` that keeps Alchemy's default `workersDev: true`, which gives it a stable workers.dev URL and per-version preview URLs. `edge.ts` gets its env type from `Cloudflare.InferEnv<typeof App>` and only forwards requests to the binding, stripping the base path first. Routing and business logic live in the API.
+The Website is a `Cloudflare.Website.Foldkit` with `env: { API: Api, BASE_PATH }` and `assets.runWorkerFirst: ["<base>api/*"]`, where the base path is `/` unless `BASE_PATH` sets a prefix. The API is a `Cloudflare.Worker` that keeps Alchemy's default `workersDev: true`, which gives it a stable workers.dev URL and per-version preview URLs. `edge.ts` gets its env type from `Cloudflare.InferEnv<typeof App>` and only forwards requests to the binding, stripping the base path first. Routing and business logic live in the API.
 
 Both Workers are public. When the product needs protected operations, enforce authentication and authorization in the API, since requests can arrive directly or through the Website.
 
@@ -60,7 +60,7 @@ To deploy, add a Cloudflare profile with `mise run cloudflare:profile` or select
 
 `stack.ts` reads optional environment variables at plan time with Effect `Config`. The [README](../README.md#environment-variables) lists them.
 
-`BASE_PATH` sets Vite's `base` and the `runWorkerFirst` pattern, and `edge.ts` strips it before forwarding, so `/<project>/api/health` reaches the API as `/api/health`.
+`BASE_PATH` sets Vite's `base` and the `runWorkerFirst` pattern, and `edge.ts` strips it before forwarding, so `/app/api/health` reaches the API as `/api/health`.
 
 ## Identity and authorization
 

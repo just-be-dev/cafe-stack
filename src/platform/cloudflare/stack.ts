@@ -21,12 +21,12 @@ const optional = (name: string) =>
 
 /**
  * Optional deploy settings, read at plan time. With none set, the stack is
- * `project-starter`, served from `/`, with no custom routes.
+ * `project-starter`, served from `/`, with no custom domain.
  *
  * - PROJECT_NAME  names the stack, so each project keeps its own Alchemy state.
- * - BASE_PATH     serves the app under a path prefix, e.g. `/<project>/`.
- * - STAGE, PROJECT_HOST, PROJECT_ZONE  with STAGE=prod and PROJECT_NAME set,
- *                 route `<host>/<project>/*` on the zone.
+ * - BASE_PATH     serves the app under a path prefix, e.g. `/app/`.
+ * - STAGE, PROJECT_HOST, PROJECT_ZONE  with STAGE=prod, prod claims `<host>`
+ *                 on the zone, e.g. `cafe.example.com`.
  */
 export const DeployConfig = Config.all({
   project: optional("PROJECT_NAME"),
@@ -38,11 +38,15 @@ export const DeployConfig = Config.all({
   Config.map(({ project, basePath, stage, host, zone }) => ({
     stackName: Option.getOrElse(project, () => "project-starter"),
     basePath,
-    prodRoute: Option.all({ project, host, zone }).pipe(
+    prodRoute: Option.all({ host, zone }).pipe(
       Option.filter(() => Option.contains(stage, "prod")),
-      Option.map(({ project, host, zone }) => ({
-        routes: [{ pattern: `${host}/${project}/*`, zoneName: zone }],
-        url: `https://${host}/${project}/`,
+      // The custom domain gives the host DNS and a certificate. The route is
+      // there too because routes outrank custom domains, so a zone-wide
+      // wildcard route (`*.example.com/*`) would otherwise win.
+      Option.map(({ host, zone }) => ({
+        domain: host,
+        routes: [{ pattern: `${host}${basePath}*`, zoneName: zone }],
+        url: `https://${host}${basePath}`,
       })),
     ),
   })),
@@ -58,7 +62,10 @@ export const App = Cloudflare.Website.Foldkit("App", {
   // Static assets are matched against the full path, so API calls are
   // `<base>api/*` (`/api/*` unless deployed under a project path).
   assets: { runWorkerFirst: [`${basePath}api/*`] },
-  ...Option.match(prodRoute, { onNone: () => ({}), onSome: ({ routes }) => ({ routes }) }),
+  ...Option.match(prodRoute, {
+    onNone: () => ({}),
+    onSome: ({ domain, routes }) => ({ domain, routes }),
+  }),
   compatibility: { date: "2026-10-04" },
   observability: {
     enabled: true,

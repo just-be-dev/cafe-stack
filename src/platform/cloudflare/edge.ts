@@ -2,7 +2,7 @@ import type { AppEnv } from "./stack.ts";
 
 export default {
   fetch(request: Request, env: AppEnv): Promise<Response> {
-    // Under a project path (`/<project>/api/health`), hand the API the path
+    // Under a base path (`/app/api/health`), hand the API the path
     // it knows (`/api/health`).
     const base = env.BASE_PATH.replace(/\/$/, "");
     const url = new URL(request.url);
