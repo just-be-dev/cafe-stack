@@ -31,6 +31,8 @@ mise run check
 mise run build  # for UI or bundling changes; touches no infrastructure
 ```
 
+CI (`.github/workflows/ci.yml`) runs the same two commands on every push to `main` and every pull request, after `bun install --frozen-lockfile`, which fails if `package.json` and `bun.lock` disagree. Bun and Node.js come from `mise.toml`. The workflow has read-only permissions and no secrets, and it never runs Alchemy, so it can't deploy or reach Cloudflare. Add browser tests as a separate job where the workflow's comment shows.
+
 Put `*.test.ts` files next to the code they cover and import test helpers from `@effect/vitest`. Use `it.effect` for Effect programs: it supplies test services and automatically closes the test's scope. Use `it.live` for Effects that need real time, and plain `it` for synchronous or Promise tests. Use memory implementations with scripted external services. Pick test inputs that a plausible wrong implementation would fail: both sides of a limit, asymmetric values, interrupted writes, duplicate delivery, stale replies, overlapping reports. Work out expected results independently of the code.
 
 `mise run test` runs the suite once; `mise run test:watch` watches for changes. To target a file or test name, run `bun run test src/api.test.ts` or `bun run test -t "health"`. The [Effect testing guide](https://www.effect.solutions/testing) explains test clocks, layers, and scoped resources; check its APIs against the installed packages.

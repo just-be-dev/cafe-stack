@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# CI only verifies. It has no secrets and never runs Alchemy, so nothing here
+# deploys or touches Cloudflare.
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Bun's package cache, restored before mise runs the install hook.
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
+      # Installs the Bun and Node.js pinned in mise.toml (cached by the action).
+      # mise's postinstall hook also runs `bun install --frozen-lockfile`, but a
+      # failing hook only logs a warning and `mise install` still succeeds.
+      - uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
+
+      # The step that enforces the lockfile: it fails when package.json and
+      # bun.lock disagree. A no-op when the hook already installed cleanly.
+      - run: bun install --frozen-lockfile
+
+      - run: mise run check
+      - run: mise run build
+
+  # Browser tests (Playwright) will be added as a separate job here. Sketch:
+  #
+  # browser:
+  #   needs: check
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - checkout, Bun cache, and mise-action steps as in `check`
+  #     - run: bunx playwright install --with-deps chromium
+  #     - run: mise run test:e2e
+  #     - uses: actions/upload-artifact@<sha> # v7
+  #       if: failure()
+  #       with:
+  #         name: browser-test-results
+  #         path: test-results/
+  #         if-no-files-found: ignore
+  #         retention-days: 7
+  #
+  # The `check` job uploads no artifacts: Vitest writes nothing to disk.
