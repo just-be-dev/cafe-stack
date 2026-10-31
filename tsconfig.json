@@ -19,21 +19,24 @@
         "allowedDuplicatedPackages": ["effect-oxlint"],
         "overrides": [
           {
-            "include": [
-              "src/ui/api.ts",
-              "src/ui/**/command.ts",
-              "src/api.ts",
-              "src/platform/cloudflare/api.ts"
-            ],
+            "include": ["src/ui/**/command.ts", "src/platform/cloudflare/api.ts"],
             "options": { "allowedUnstableApis": ["effect/http"] }
+          },
+          {
+            "include": ["src/rpc.ts"],
+            "options": { "allowedUnstableApis": ["effect/rpc"] }
+          },
+          {
+            "include": ["src/api.ts", "src/ui/api.ts"],
+            "options": { "allowedUnstableApis": ["effect/http", "effect/rpc"] }
           },
           {
             "include": ["src/**/*.test.ts"],
             "options": { "allowedUnstableApis": ["@effect/vitest"] }
           },
           {
-            "include": ["src/api.test.ts"],
-            "options": { "allowedUnstableApis": ["effect/http", "@effect/vitest"] }
+            "include": ["src/api.test.ts", "src/rpc.test.ts", "src/ui/api.test.ts"],
+            "options": { "allowedUnstableApis": ["effect/http", "effect/rpc", "@effect/vitest"] }
           }
         ]
       }
