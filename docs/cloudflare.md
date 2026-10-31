@@ -23,6 +23,14 @@ Both Workers are public. When the product needs protected operations, enforce au
 
 Both Workers use compatibility date `2026-10-04`. When you move it, test the new date rather than relying on Cloudflare's default.
 
+Both Workers also set `enable_request_signal` and `request_signal_passthrough`. The first makes `request.signal` abort when the client disconnects; it is experimental and has no default-on date. The second carries that signal to a subrequest when a Worker forwards the incoming request, which `edge.ts` does over the service binding, so a client abort can reach the API. What's verified and what isn't:
+
+- Verified locally: both Workers boot with the flags under `alchemy dev`, and `/api/health` answers through the Website URL.
+- Not verified: propagation itself. Under `alchemy dev`, a Bun proxy sits in front of each local Worker and doesn't pass client disconnects on, so `request.signal` never aborted locally, not even on direct requests to the API. Check it on a deployed preview stage.
+- Alchemy's Effect bridge (`2.0.0-beta.83`) doesn't interrupt the handler fiber when the signal aborts, unlike Effect's own `HttpEffect.toWebHandler`. A handler that should stop work on abort has to read the raw request from `Cloudflare.Request` and listen to its `signal`.
+
+Remove both flags if a Worker misbehaves around request cloning or cancellation.
+
 ## Telemetry
 
 `stack.ts` turns on persisted invocation logs and traces for the Website. `api.ts` turns on persisted invocation logs and provides `Cloudflare.Telemetry({ headSamplingRate: 1, persist: true })` on the Worker's outer Effect. That layer adds the API's trace configuration at plan time and builds a fresh tracer for each invocation. Keep it on the Worker host, not on domain services or a runtime shared across requests.
