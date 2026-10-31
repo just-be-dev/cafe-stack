@@ -17,16 +17,26 @@ const sources = async function* (include: (path: string) => boolean) {
 };
 
 // Include type-only imports, re-exports, and dynamic imports, which a runtime import scan misses.
-const importViolations = (path: string, source: string) =>
+const importSpecifiers = (source: string) =>
   Array.from(source.matchAll(/\b(?:from\s*|import\s*(?:\(\s*)?)["']([^"']+)["']/g))
     .map((match) => match[1])
-    .filter((specifier) => specifier !== undefined)
-    .filter((specifier) => {
-      const target = specifier.startsWith("@/")
-        ? resolve(src, "ui", specifier.slice(2))
-        : resolve(src, dirname(path), specifier);
-      return backendOnlyPackage.test(specifier) || target.startsWith(`${src}/platform/`);
-    })
+    .filter((specifier) => specifier !== undefined);
+
+// Resolves relative and `@/` specifiers to absolute paths; packages resolve to undefined.
+const resolveSpecifier = (path: string, specifier: string) =>
+  specifier.startsWith("@/")
+    ? resolve(src, "ui", specifier.slice(2))
+    : specifier.startsWith(".")
+      ? resolve(src, dirname(path), specifier)
+      : undefined;
+
+const importViolations = (path: string, source: string) =>
+  importSpecifiers(source)
+    .filter(
+      (specifier) =>
+        backendOnlyPackage.test(specifier) ||
+        (resolveSpecifier(path, specifier)?.startsWith(`${src}/platform/`) ?? false),
+    )
     .map((specifier) => `${path}: ${specifier}`);
 
 it("backend domains don't depend on platform adapters, SDKs, or Cloudflare globals", async () => {
@@ -48,6 +58,25 @@ it("the UI doesn't depend on platform adapters or backend-only SDKs", async () =
   const violations: Array<string> = [];
   for await (const { path, source } of sources((path) => path.startsWith("ui/"))) {
     violations.push(...importViolations(path, source));
+  }
+  expect(violations).toEqual([]);
+});
+
+// Tests may wire the real server to the real client; shipped UI code may not.
+const sharedWithUi = [resolve(src, "rpc.ts"), resolve(src, "model.ts")];
+
+it("the UI bundle reaches backend code only through the shared contract and models", async () => {
+  const violations: Array<string> = [];
+  for await (const { path, source } of sources(
+    (path) => path.startsWith("ui/") && !path.endsWith(".test.ts"),
+  )) {
+    for (const specifier of importSpecifiers(source)) {
+      const target = resolveSpecifier(path, specifier);
+      if (target === undefined) continue;
+      if (!target.startsWith(`${src}/ui/`) && !sharedWithUi.includes(target)) {
+        violations.push(`${path}: ${specifier}`);
+      }
+    }
   }
   expect(violations).toEqual([]);
 });

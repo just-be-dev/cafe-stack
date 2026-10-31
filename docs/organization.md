@@ -1,12 +1,13 @@
 # Organization
 
-The starter keeps the backend flat in `src/model.ts`, `src/service.ts`, and `src/api.ts`, with Cloudflare code in `src/platform/cloudflare/` and the frontend in `src/ui/`. As the project grows, it can take roughly this shape. Create folders when there's code to put in them.
+The starter keeps the backend flat in `src/model.ts`, `src/service.ts`, `src/rpc.ts`, and `src/api.ts`, with Cloudflare code in `src/platform/cloudflare/` and the frontend in `src/ui/`. As the project grows, it can take roughly this shape. Create folders when there's code to put in them.
 
 ```text
 alchemy.run.ts                     re-exports the platform stack
 src/
   <domain>/
     model.ts                       Schema models, IDs, validation, errors
+    rpc.ts                         RpcGroup contract shared with the UI
     service.ts                     capability contract, when one is needed
     application.ts                 complete use cases and composition
     store.ts                       shared persistence rules + memory implementation
@@ -35,7 +36,7 @@ src/
     update/ / view/                split by area as the root grows
     page/<page>/                   page Submodels and their tests
     domain/                        pure UI/domain transformations
-    api.ts / theme.ts              HTTP helpers and theme Flags
+    api.ts / theme.ts              typed RPC client service and theme Flags
     lib/ / components/             shared leaves; foldcn copies in components/ui/
     styles.css                     Tailwind v4 and theme tokens
 public/                            static assets and _headers
@@ -54,7 +55,7 @@ Cloudflare host ──→ HTTP/application ──→ domain models + capability 
 UI entry ──→ root ──→ page Submodels ──→ shared UI/domain leaves
 ```
 
-HTTP code knows nothing about Cloudflare binding names or headers. Platform hosts provide the services it uses. Backend code imports from the owning domain directly. Add a barrel file when something consumes it, such as the frontend importing domain models.
+HTTP code knows nothing about Cloudflare binding names or headers. The UI imports backend code only through the RPC contract and the models it uses; `boundary.test.ts` checks that too. Platform hosts provide the services it uses. Backend code imports from the owning domain directly. Add a barrel file when something consumes it, such as the frontend importing domain models.
 
 Pages never import the root app; they talk to the parent through Messages and OutMessages. A small app can keep its pure definitions in `main.ts` and split `model`, `message`, and `command` out as they grow. Runtime boot always stays in `entry.ts` so tests can import definitions without starting the app.
 
