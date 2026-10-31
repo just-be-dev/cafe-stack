@@ -36,6 +36,8 @@ src/
 
 Root files configure Bun, mise, Node.js, TypeScript, Vite, Vitest with `@effect/vitest`, Oxlint/Oxfmt, foldcn, the Foldkit DevTools MCP server, and dependency patches.
 
+GitHub Actions (`.github/workflows/ci.yml`) runs `mise run check` and `mise run build` on pushes to `main` and on pull requests. It doesn't deploy and needs no secrets.
+
 ## Starting a new project
 
 1. Click **Use this template → Create a new repository** and pick the new repository's visibility.
