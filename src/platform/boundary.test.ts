@@ -29,3 +29,29 @@ it("backend domains don't depend on platform adapters, SDKs, or Cloudflare globa
   }
   expect(violations).toEqual([]);
 });
+
+it("the UI bundle reaches backend code only through the shared contract and models", async () => {
+  const src = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+  const violations: Array<string> = [];
+  for await (const path of glob("ui/**/*.ts", { cwd: src })) {
+    if (path.endsWith(".test.ts")) continue;
+    const source = await readFile(resolve(src, path), "utf8");
+    for (const match of source.matchAll(/\b(?:from\s*|import\s*(?:\(\s*)?)["']([^"']+)["']/g)) {
+      const specifier = match[1];
+      if (specifier === undefined || !specifier.startsWith(".")) {
+        if (
+          specifier !== undefined &&
+          /^(alchemy|cloudflare:|@cloudflare\/|agents(?:\/|$))/.test(specifier)
+        ) {
+          violations.push(`${path}: ${specifier}`);
+        }
+        continue;
+      }
+      const target = resolve(src, dirname(path), specifier);
+      const isUi = target.startsWith(`${src}/ui/`);
+      const isShared = [`${src}/rpc.ts`, `${src}/model.ts`].includes(target);
+      if (!isUi && !isShared) violations.push(`${path}: ${specifier}`);
+    }
+  }
+  expect(violations).toEqual([]);
+});
