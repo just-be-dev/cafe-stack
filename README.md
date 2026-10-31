@@ -8,6 +8,7 @@ It comes with a Foldkit page (a counter and a typed RPC call), a small Effect se
 mise trust && mise install
 mise run check
 mise run build
+mise run test:e2e:install && mise run test:e2e   # browser tests
 mise run dev
 ```
 
@@ -34,11 +35,15 @@ src/
     lib/utils.ts                 `cn` class helper
     story.test.ts / scene.test.ts  update and view tests
     AGENTS.md                    Foldkit conventions
+e2e/
+  *.spec.ts                      Playwright and axe tests of the built UI
+  api.ts                         serves the real API routes to the page
+  page.ts                        shared page checks (clean boot, CSP, focus)
 ```
 
-Root files configure Bun, mise, Node.js, TypeScript, Vite, Vitest with `@effect/vitest`, Oxlint/Oxfmt, foldcn, the Foldkit DevTools MCP server, and dependency patches.
+Root files configure Bun, mise, Node.js, TypeScript, Vite, Vitest with `@effect/vitest`, Playwright, Oxlint/Oxfmt, foldcn, the Foldkit DevTools MCP server, and dependency patches.
 
-GitHub Actions (`.github/workflows/ci.yml`) runs `mise run check` and `mise run build` on pushes to `main` and on pull requests. It doesn't deploy and needs no secrets.
+GitHub Actions (`.github/workflows/ci.yml`) runs `mise run check` and `mise run build` on pushes to `main` and on pull requests, then the Playwright suite in Chromium and WebKit in a separate `browser` job. It doesn't deploy and needs no secrets. The browser tests serve the UI with `vite preview` and answer `/api/*` with the real routes in the test process, so native Worker, D1, Durable Object, and AI behavior still needs checks under `mise run dev`.
 
 ## Starting a new project
 

@@ -68,6 +68,26 @@ export default defineConfig({
         ],
       },
     },
+    {
+      files: ["e2e/**/*.ts", "playwright.config.ts"],
+      rules: {
+        "no-restricted-imports": [
+          "error",
+          {
+            patterns: [
+              ...backendOnlyPackages.map(({ regex }) => ({
+                regex,
+                message: "Browser tests serve the portable API routes, not the Workers.",
+              })),
+              {
+                regex: "^(?:\\.\\.?/)+src/platform(?:/|$)",
+                message: "Browser tests serve the portable API routes, not the Workers.",
+              },
+            ],
+          },
+        ],
+      },
+    },
     ...foldkit.configs.recommended.overrides,
   ],
 });

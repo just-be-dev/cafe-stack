@@ -9,3 +9,5 @@ dist/
 .dev.vars.*
 repos/
 .vitest/
+test-results/
+playwright-report/

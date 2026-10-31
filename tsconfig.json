@@ -31,6 +31,10 @@
             "options": { "allowedUnstableApis": ["effect/http", "effect/rpc"] }
           },
           {
+            "include": ["e2e/api.ts"],
+            "options": { "allowedUnstableApis": ["effect/http"] }
+          },
+          {
             "include": ["src/**/*.test.ts"],
             "options": { "allowedUnstableApis": ["@effect/vitest"] }
           },
@@ -44,7 +48,9 @@
   },
   "include": [
     "src/**/*.ts",
+    "e2e/**/*.ts",
     "alchemy.run.ts",
+    "playwright.config.ts",
     "oxlint.config.ts",
     "vite.config.ts",
     "vitest.config.ts"

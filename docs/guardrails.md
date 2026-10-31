@@ -10,6 +10,7 @@
 | Durable behavior      | At-least-once delivery, deterministic replay, idempotent side effects        | Crash, retry, and replay tests on the real host                         |
 | Storage compatibility | Append migrations; keep stored contracts or migrate them explicitly          | Upgrade and old-data tests                                              |
 | UI architecture       | Schema Model, fact-like Messages, pure update/view, effects in Commands      | Foldkit lint rules in `src/ui/`, Story and Scene tests                  |
+| Browser behavior      | The built UI boots under the shipped CSP, is accessible, and honors the base | Playwright and axe in `e2e/` (`mise run test:e2e`)                      |
 | Dependencies          | Exact pins, reviewed patches and lockfile                                    | Frozen install, typecheck, lint, tests, build, documented patch removal |
 | Operations            | No deploys, production writes, or publishing without approval                | Agent instructions and human sign-off                                   |
 
@@ -28,16 +29,21 @@
 
 ```sh
 mise run check
-mise run build  # for UI or bundling changes; touches no infrastructure
+mise run build     # for UI or bundling changes; touches no infrastructure
+mise run test:e2e  # browser tests for UI changes; run `mise run test:e2e:install` once first
 ```
 
-CI (`.github/workflows/ci.yml`) runs the same two commands on every push to `main` and every pull request, after `bun install --frozen-lockfile`, which fails if `package.json` and `bun.lock` disagree. Bun and Node.js come from `mise.toml`. The workflow has read-only permissions and no secrets, and it never runs Alchemy, so it can't deploy or reach Cloudflare. Add browser tests as a separate job where the workflow's comment shows.
+CI (`.github/workflows/ci.yml`) runs the first two commands in its `check` job on every push to `main` and every pull request, after `bun install --frozen-lockfile`, which fails if `package.json` and `bun.lock` disagree. A `browser` job then installs Chromium and WebKit with their system dependencies and runs `mise run test:e2e`; when it fails, it uploads `test-results/` and `playwright-report/` (traces, screenshots, axe reports) as an artifact. Bun and Node.js come from `mise.toml`. The workflow has read-only permissions and no secrets, and it never runs Alchemy, so it can't deploy or reach Cloudflare.
 
 Put `*.test.ts` files next to the code they cover and import test helpers from `@effect/vitest`. Use `it.effect` for Effect programs: it supplies test services and automatically closes the test's scope. Use `it.live` for Effects that need real time, and plain `it` for synchronous or Promise tests. Use memory implementations with scripted external services. Pick test inputs that a plausible wrong implementation would fail: both sides of a limit, asymmetric values, interrupted writes, duplicate delivery, stale replies, overlapping reports. Work out expected results independently of the code.
 
 `mise run test` runs the suite once; `mise run test:watch` watches for changes. To target a file or test name, run `bun run test src/api.test.ts` or `bun run test -t "health"`. The [Effect testing guide](https://www.effect.solutions/testing) explains test clocks, layers, and scoped resources; check its APIs against the installed packages.
 
 Foldkit Story tests send Messages through update. Scene tests drive the view through accessible locators. Put page-owned behavior in page-level tests and routing or parent-child communication in root tests. For visual changes, also open the app in a browser and look at the affected states.
+
+The Playwright suite in `e2e/` runs the built UI in Chromium and WebKit. `playwright.config.ts` builds it twice, at `/` and with `BASE_PATH=/app/`, and serves each with `vite preview` on a fixed port (`strictPort`, never reusing a running server). The preview is static, so `e2e/api.ts` answers `<base>api/*` inside the test process with the real `apiRoutes` from `src/api.ts` (request bounds, RPC decoding, typed failures) and a test `AppInfo`; it strips the base path the way the Website edge does. Documents get the headers from `public/_headers`, so the app runs under the shipped CSP. Specs use role, label, and text locators and cover clean boot, the counter, each greeting state, keyboard use with visible focus, axe scans of every state at 320, 390, and 1440 CSS px in light and dark mode, and the RPC URL under a base path. Each axe scan saves a full-page screenshot beside its report in `test-results/`; look at them after visual changes. Run one project or test with `bun run test:e2e --project chromium` or `bun run test:e2e -g "keyboard"`. When you add a page or state, add it to the axe loop and a behavior spec.
+
+The browser suite proves the UI against the portable routes, not the deployment: it doesn't run the Website edge, the API Worker, service bindings, D1, Durable Objects, AI, or telemetry. Check those under `mise run dev`.
 
 Run native checks under `mise run dev` against the Website URL it prints. Start with GET endpoints and assert on both the status and the decoded body. Mutating calls can change data, schedule jobs, call paid AI, or reach other systems, so use throwaway local data and approved destinations. Native transactions, callback delivery, real AI calls, and telemetry ingestion all need checks beyond memory tests; confirm logs and traces in the Cloudflare dashboard after an approved deploy.
 

@@ -47,6 +47,7 @@ mise run check
 ```
 
 - Run `mise run build` for UI or build changes. It's a local check, not a deploy.
+- Run `mise run test:e2e` for UI changes: Playwright and axe against the built UI, with `/api/*` answered by the real routes in `src/api.ts`. It doesn't exercise Workers, bindings, or storage.
 - Tests use Vitest with imports from `@effect/vitest` next to the code they cover. Use `it.effect` for Effect tests with automatic scoping and test services, `it.live` when real time is required, and plain `it` for synchronous or Promise tests.
 - Use memory services for application tests. Native Worker, Durable Object, D1, identity, and AI behavior needs local end-to-end checks with `mise run dev` and the URL it prints.
 - Test both sides of boundaries, plus failure, retry, and concurrency cases that would catch a plausible bug. Memory tests don't prove native transactional guarantees.
