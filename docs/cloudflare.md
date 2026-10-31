@@ -86,6 +86,12 @@ Turn verified identity into a platform-independent, request-scoped service and c
 - If a state write and a schedule must be atomic, expose one host capability that owns that transaction and test it on the native implementation. Separate D1 and Durable Object stores can't share a transaction.
 - Deterministic replay rebuilds working values from its journal. Network calls go in journaled Activities.
 
+## Optional: SSR and prerendering
+
+The Website serves a client-rendered Foldkit app from static assets. Foldkit's Vite plugin can also render pages on the server: `foldkit({ ssr: { serverEntry, clientEntry, build } })` takes a server entry such as `src/ui/entry.server.ts` that exports `renderPage` and `renderDocument`, built with `Server` from `foldkit/experimental`. `build: { prerender: true }` writes static HTML for the paths the entry exports as `prerenderPaths`. The client entry then calls `Runtime.hydrate` instead of `Runtime.run`, and the source tree drops `index.html`. See `examples/ssr` and `examples/ssg` in the Foldkit repository (`repos/foldkit/` after `mise run foldkit:source`).
+
+This is a variant, not the default. Prerendered pages can still ship as assets. Rendering at request time needs the Website Worker to run the server bundle for page requests instead of only forwarding `/api/*`, which changes `edge.ts` and `runWorkerFirst` and adds hydration checks. Plan it as its own change.
+
 ## References
 
 - [Alchemy documentation index](https://alchemy.run/llms.txt). Append `.md` to any docs page URL for Markdown.
