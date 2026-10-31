@@ -23,6 +23,14 @@ Both Workers are public. When the product needs protected operations, enforce au
 
 Both Workers use compatibility date `2026-10-04`. When you move it, test the new date rather than relying on Cloudflare's default.
 
+Both Workers also set `enable_request_signal` and `request_signal_passthrough`. The first makes `request.signal` abort when the client disconnects; it is experimental and has no default-on date. The second carries that signal to a subrequest when a Worker forwards the incoming request, which `edge.ts` does over the service binding, so a client abort can reach the API. What's verified and what isn't:
+
+- Verified locally: both Workers boot with the flags under `alchemy dev`, and `/api/health` answers through the Website URL.
+- Not verified: propagation itself. Under `alchemy dev`, a Bun proxy sits in front of each local Worker and doesn't pass client disconnects on, so `request.signal` never aborted locally, not even on direct requests to the API. Check it on a deployed preview stage.
+- Alchemy's Effect bridge (`2.0.0-beta.83`) doesn't interrupt the handler fiber when the signal aborts, unlike Effect's own `HttpEffect.toWebHandler`. A handler that should stop work on abort has to read the raw request from `Cloudflare.Request` and listen to its `signal`.
+
+Remove both flags if a Worker misbehaves around request cloning or cancellation.
+
 ## Telemetry
 
 `stack.ts` turns on persisted invocation logs and traces for the Website. `api.ts` turns on persisted invocation logs and provides `Cloudflare.Telemetry({ headSamplingRate: 1, persist: true })` on the Worker's outer Effect. That layer adds the API's trace configuration at plan time and builds a fresh tracer for each invocation. Keep it on the Worker host, not on domain services or a runtime shared across requests.
@@ -77,6 +85,12 @@ Turn verified identity into a platform-independent, request-scoped service and c
 - `Alchemy.makeCallback` delivers at least once. Callback names and payloads, schedule keys, storage keys, and replay journal names all become stored contracts. Make callbacks idempotent before shipping.
 - If a state write and a schedule must be atomic, expose one host capability that owns that transaction and test it on the native implementation. Separate D1 and Durable Object stores can't share a transaction.
 - Deterministic replay rebuilds working values from its journal. Network calls go in journaled Activities.
+
+## Optional: SSR and prerendering
+
+The Website serves a client-rendered Foldkit app from static assets. Foldkit's Vite plugin can also render pages on the server: `foldkit({ ssr: { serverEntry, clientEntry, build } })` takes a server entry such as `src/ui/entry.server.ts` that exports `renderPage` and `renderDocument`, built with `Server` from `foldkit/experimental`. `build: { prerender: true }` writes static HTML for the paths the entry exports as `prerenderPaths`. The client entry then calls `Runtime.hydrate` instead of `Runtime.run`, and the source tree drops `index.html`. See `examples/ssr` and `examples/ssg` in the Foldkit repository (`repos/foldkit/` after `mise run foldkit:source`).
+
+This is a variant, not the default. Prerendered pages can still ship as assets. Rendering at request time needs the Website Worker to run the server bundle for page requests instead of only forwarding `/api/*`, which changes `edge.ts` and `runWorkerFirst` and adds hydration checks. Plan it as its own change.
 
 ## References
 

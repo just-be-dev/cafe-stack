@@ -7,3 +7,5 @@ dist/
 !.env.example
 .dev.vars
 .dev.vars.*
+repos/
+.vitest/

@@ -6,8 +6,10 @@ export default defineConfig({
     alias: { "@/": fileURLToPath(new URL("./src/ui/", import.meta.url)) },
     dedupe: ["effect", "foldkit"],
   },
+  server: { watch: { ignored: ["**/repos/**"] } },
   test: {
     include: ["src/**/*.test.ts"],
     environment: "node",
+    setupFiles: ["./src/ui/vitest-setup.ts"],
   },
 });

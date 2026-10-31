@@ -15,5 +15,5 @@ export default defineConfig({
     alias: { "@/": fileURLToPath(new URL("./src/ui/", import.meta.url)) },
     dedupe: ["effect", "foldkit"],
   },
-  server: { watch: { ignored: ["**/.alchemy/**"] } },
+  server: { watch: { ignored: ["**/.alchemy/**", "**/repos/**"] } },
 });

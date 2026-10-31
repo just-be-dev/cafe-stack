@@ -7,7 +7,7 @@ These instructions cover `src/ui/` and everything under it. The UI uses Foldkit,
 - Import Foldkit from the installed npm packages.
 - Runtime boot lives in `src/ui/entry.ts`; the definitions it boots live in their own modules (see Layout). Server code lives outside `src/ui/` (see the root `AGENTS.md`). Alchemy runs the Vite dev server under `alchemy dev` and the Vite build for the Website Worker on deploy. `mise run build` is a local check.
 - Foldkit's architecture lint rules apply to `src/ui/` only.
-- Check APIs against the installed package types and the upstream source at the `foldkit@<installed-version>` GitHub tag. When these conventions or the online docs disagree with the installed APIs, the source and examples win.
+- Check APIs against the installed package types and the upstream source at the `foldkit@<installed-version>` tag. Run `mise run foldkit:source` to get that tag as a local clone in `repos/foldkit/` (gitignored), and read it there when present. When these conventions or the online docs disagree with the installed APIs, the source and examples win.
 
 ## Layout
 
@@ -20,6 +20,15 @@ The app follows [Foldkit's project organization](https://foldkit.dev/patterns/pr
 - Shared leaves know nothing about the root app: `api.ts` (HTTP helpers for Commands), `theme.ts` (Flags and saved theme), `lib/` (`cn`, icons, text and date formatting), and `components/` (shared components, with foldcn copies in `components/ui/`).
 - Root `story.test.ts` and `scene.test.ts` cover cross-page flows and parent composition. Put fixtures at the narrowest shared scope.
 
+## Testing conventions
+
+- Name each test for its trigger and observable result. Give parameterized cases distinct names, so a failure says which case broke.
+- Share repeated Story steps, such as a common setup or a Command resolution, through a story test helper module beside the tests that use it. Keep ordering-sensitive steps visible in each Story.
+- Put fixtures in `*.fixture.ts` files at the narrowest scope that shares them.
+- Prefer role, label, and text locators in Scenes. Use selectors for presentation structure or explicit attribute wiring.
+- Put units in numeric names: `debounceMillis`, `rowHeightPx`.
+- `src/ui/vitest-setup.ts` registers Foldkit's Scene matchers, so `expect(locator(html)).toHaveText(...)` works inside a Scene `tap` step. Tests run on Node without a DOM; see `docs/tooling.md` for the one Scene step that needs one.
+
 ## Styling and foldcn
 
 The UI uses Tailwind CSS v4 and [foldcn](https://foldcn.elianiva.com), a shadcn-style registry of copy-paste Foldkit components. Agent docs are at https://foldcn.elianiva.com/llms.txt, and every page has a Markdown version at `/docs/<name>.md`.
@@ -30,11 +39,13 @@ The UI uses Tailwind CSS v4 and [foldcn](https://foldcn.elianiva.com), a shadcn-
 - Theme tokens live in `src/ui/styles.css`. Use semantic tokens like `bg-card` and `text-muted-foreground` instead of raw colors. For a saved theme, keep the system preference and an explicit `data-theme` in sync across Tailwind's dark variant, boot Flags, the persistence Command, and a same-origin pre-paint script.
 - Fonts are self-hosted with Fontsource and imported in `entry.ts`; Inter and IBM Plex Mono are installed. The CSP in `public/_headers` sets `font-src 'self'`, so load fonts and stylesheets from this origin.
 
-Upstream paths below are relative to the Foldkit repository at the installed release tag (`https://github.com/foldkit/foldkit/tree/foldkit@<version>`):
+Upstream paths below are relative to the Foldkit repository at the installed release tag: `repos/foldkit/` after `mise run foldkit:source`, or `https://github.com/foldkit/foldkit/tree/foldkit@<version>`:
 
 - `examples/`: runnable examples of idiomatic patterns.
 - `packages/foldkit/src/`: framework source and API signatures.
 - `packages/typing-game/client/src/` and `packages/website/src/`: production apps showing Submodels and OutMessages.
+
+Foldkit's experimental Query (`import { Query } from "foldkit/experimental"`, then `Query.define`) is available for cached and keyed fetches. It keeps results, pending state, freshness, and stale-response protection in the Model. Check its API in `packages/foldkit/src/experimental/query/` and `examples/api-cache-query/` before using it, and don't build a second cache beside it.
 
 Online references: https://foldkit.dev/ai/overview.md and https://foldkit.dev/llms.txt.
 

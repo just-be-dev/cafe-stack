@@ -24,15 +24,15 @@ Effect 4 is a stable release; older guides that call it a pre-release are out of
 ## Config files
 
 - `mise.toml`: pins Bun and Node.js, turns on experimental settings and pinning, adds `node_modules/.bin` to PATH, and installs the dependencies locked in `bun.lock` after tools install, so `mise install` is the only setup step. Each package script has a matching mise task, and `mise tasks` lists them all. Change tool versions with `mise use bun@<version>` or `mise use node@<version>`.
-- `vitest.config.ts`: discovers `src/**/*.test.ts` in the Node.js environment, with the UI `@/` alias and Effect/Foldkit deduplication. This separate config keeps the app's Vite plugins and DevTools relay out of test runs. Tests import helpers from `@effect/vitest`; Effect tests use `it.effect` for test services and automatic scope cleanup.
+- `vitest.config.ts`: discovers `src/**/*.test.ts` in the Node.js environment, with the UI `@/` alias and Effect/Foldkit deduplication. This separate config keeps the app's Vite plugins and DevTools relay out of test runs. Tests import helpers from `@effect/vitest`; Effect tests use `it.effect` for test services and automatic scope cleanup. `src/ui/vitest-setup.ts` registers Foldkit's Scene matchers (`toHaveText`, `toExist`, and the rest) on Vitest's `expect`, for assertions on a located VNode inside a Scene `tap` step. Scenes render to VNodes and run without a DOM. Scene's `pointerDown` builds a DOM event target, so a file that uses it needs a DOM: add an exact-pinned `happy-dom` and put `// @vitest-environment happy-dom` at the top of that file, so backend tests stay on Node.
 - `package.json`: ESM, `private: true`, scripts, exact pins, the Effect/platform and workerd overrides, and Bun patch mappings.
 - `tsconfig.json`: strict mode, `noUncheckedIndexedAccess`, bundler resolution, preserved modules, `verbatimModuleSyntax`, and the Effect language-service plugin. Browser, Worker, and Bun types are all loaded; the boundary test keeps native globals out of backend domains.
 - Language-service overrides allow the unstable `effect/http` module only in HTTP, UI command, and platform API files, and `@effect/vitest` only in test files. The HTTP test permits both. `effect-oxlint` is allowed as a duplicate Effect consumer. Add narrow per-file exceptions for other unstable APIs as you use them.
-- `vite.config.ts`: the `foldkit()` and Tailwind plugins, UI entry optimization, the `@/` alias, Effect/Foldkit deduplication, and a watch exclusion for `.alchemy/`. Alchemy adds its Cloudflare integration on top for dev and deploy. `mise run build` checks the UI bundle locally.
+- `vite.config.ts`: the `foldkit()` and Tailwind plugins, UI entry optimization, the `@/` alias, Effect/Foldkit deduplication, and watch exclusions for `.alchemy/` and `repos/`. Alchemy adds its Cloudflare integration on top for dev and deploy. `mise run build` checks the UI bundle locally.
 - `oxlint.config.ts`: loads the Effect and Foldkit plugins and turns on three Effect rules, `typescript/no-explicit-any`, `typescript/consistent-type-assertions` (no `as` casts; decode with Schema or use `satisfies`), and `no-unused-vars` (prefix intentionally unused names with `_`) everywhere. It applies Foldkit's architecture rules to `src/ui/**/*.ts`, and `no-restricted-imports` overrides keep backend domain and HTTP code and the UI from importing `src/platform/`, Alchemy, `agents`, `cloudflare:*`, or `@cloudflare/*`.
 - `components.json`: foldcn registry and UI aliases for the shadcn CLI, pointing at `src/ui/styles.css`.
 - `.mcp.json`: runs the `@foldkit/devtools-mcp` server with Bun. The tools inspect a running app's Model and Messages and support time travel during local development.
-- `public/_headers`: CSP and `nosniff` for static assets. Fonts and scripts are same-origin.
+- `public/_headers`: CSP and `nosniff` for static assets. Fonts, images (including `public/favicon.svg`), and scripts are same-origin.
 - `src/ui/AGENTS.md`: Foldkit conventions for this release and the steps to refresh them after an upgrade.
 - `src/platform/boundary.test.ts`: the authoritative dependency-direction check for backend code and the UI. The lint overrides mirror it for editor feedback; the test also resolves paths exactly, including `@/`, and scans backend code for Cloudflare globals. Change both together.
 - `patches/`: two Bun patches for the Foldkit DevTools relay, documented in `patches/README.md`.
@@ -53,7 +53,7 @@ mise run build
 mise run dev
 ```
 
-`mise run format` rewrites files; `format:check` only reports. `mise run deploy` runs `alchemy deploy --stage prod` and changes shared infrastructure, so only run it with approval and after setting up your own stack, account, and stage.
+`mise run format` rewrites files; `format:check` only reports. `mise run foldkit:source` shallow-clones Foldkit at the installed `foldkit@<version>` tag into `repos/foldkit/`, so agents can read its source and examples locally. It does nothing when the clone is already at that tag and replaces it after an upgrade. `repos/` is in `.gitignore` and `.ignore`, so Git, ripgrep, Oxlint, and Oxfmt skip it; TypeScript and Vitest only include `src/`, and Vite doesn't watch it. `mise run deploy` runs `alchemy deploy --stage prod` and changes shared infrastructure, so only run it with approval and after setting up your own stack, account, and stage.
 
 ## Patches
 
