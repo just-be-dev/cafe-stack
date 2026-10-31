@@ -71,6 +71,9 @@ for (const [label, name] of [
     await page.goto("./");
     await submitGreeting(page, name);
     await expect(greetingStatus(page)).toHaveText("Enter a name of 1 to 40 characters.");
+    const field = page.getByLabel("Your name");
+    await expect(field).toHaveAttribute("aria-invalid", "true");
+    await expect(field).toHaveAccessibleDescription("1 to 40 characters.");
     expect(requested).toEqual([]);
   });
 }

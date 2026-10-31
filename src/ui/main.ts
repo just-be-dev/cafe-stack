@@ -9,6 +9,7 @@ import { defineTaggedUnion } from "foldkit/schema";
 import { modifyFields } from "foldkit/struct";
 import type * as Update from "foldkit/update";
 import { Greeting, GreetingName } from "../model.ts";
+import { Input } from "@foldkit/ui";
 import { AppClient } from "@/api";
 import { button } from "@/components/ui/button";
 import { input } from "@/components/ui/input";
@@ -117,6 +118,8 @@ export const update = (model: Model, message: Message) =>
 
 // VIEW
 
+const GREETING_NAME_ID = "greeting-name";
+
 const greetingStatus = (request: GreetingRequest, h: HtmlBuilder<Message>): Html =>
   GreetingRequest.match(request, {
     Idle: () => h.p([h.Class("text-sm text-muted-foreground")], ["No greeting yet."]),
@@ -124,7 +127,7 @@ const greetingStatus = (request: GreetingRequest, h: HtmlBuilder<Message>): Html
       h.p([h.Class("text-sm text-destructive")], ["Enter a name of 1 to 40 characters."]),
     Loading: ({ name }) => h.p([h.Class("text-sm text-muted-foreground")], [`Greeting ${name}…`]),
     Succeeded: ({ greeting }) =>
-      h.p([h.Class("font-mono text-lg")], [`${greeting.message} (from ${greeting.app})`]),
+      h.p([h.Class("font-mono text-sm")], [`${greeting.message} (from ${greeting.app})`]),
     Failed: ({ failure }) =>
       h.p(
         [h.Class("text-sm text-destructive")],
@@ -207,9 +210,11 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
             [
               input(
                 {
-                  id: "greeting-name",
+                  id: GREETING_NAME_ID,
                   label: "Your name",
                   value: model.name,
+                  isInvalid: GreetingRequest.guards.InvalidName(model.greeting),
+                  hasExternalDescription: true,
                   onInput: (value) => Message.UpdatedName({ value }),
                 },
                 h,
@@ -221,7 +226,18 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
               ),
             ],
           ),
-          h.div([h.Class("mt-4"), h.AriaLive("polite")], [greetingStatus(model.greeting, h)]),
+          h.p(
+            [
+              h.Id(Input.descriptionId(GREETING_NAME_ID)),
+              h.Class("mt-1.5 text-sm text-muted-foreground"),
+            ],
+            ["1 to 40 characters."],
+          ),
+          // NOTE: min-h fits two lines so wrapped results don't shift the centred page.
+          h.div(
+            [h.Class("mt-4 min-h-10"), h.AriaLive("polite")],
+            [greetingStatus(model.greeting, h)],
+          ),
         ],
       ),
       h.p(

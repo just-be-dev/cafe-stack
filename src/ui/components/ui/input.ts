@@ -22,6 +22,8 @@ export type InputConfig<M> = Readonly<{
   id: string;
   label: string;
   description?: string;
+  /** The caller renders the description itself, under `Input.descriptionId(id)`. */
+  hasExternalDescription?: boolean;
   onInput?: (value: string) => M;
   value?: string;
   isDisabled?: boolean;
@@ -43,7 +45,7 @@ export const input = <M>(config: InputConfig<M>, h: HtmlBuilder<M>): Html =>
   FoldkitInput.view<M>(
     {
       id: config.id,
-      hasDescription: config.description !== undefined,
+      hasDescription: config.description !== undefined || config.hasExternalDescription === true,
       onInput: config.onInput,
       value: config.value,
       isDisabled: config.isDisabled,
