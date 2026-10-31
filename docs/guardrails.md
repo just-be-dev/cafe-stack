@@ -2,7 +2,7 @@
 
 | Concern               | Rule                                                                         | How it's checked                                                        |
 | --------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Platform isolation    | Domains and HTTP don't import Cloudflare or Alchemy                          | `src/platform/boundary.test.ts`; extend it for new imports and globals  |
+| Platform isolation    | Domains, HTTP, and UI don't import platform code, Cloudflare, or Alchemy     | `src/platform/boundary.test.ts` and lint overrides; extend both         |
 | Untrusted data        | Schema-decode bodies, params, storage, remote output, config, AI answers     | Malformed-input tests                                                   |
 | Effect errors         | Typed expected failures; map errors structurally across RPC                  | `Schema.TaggedError`, failure tests, lint rules                         |
 | Request lifetime      | Identity belongs to one request; locks to the instance they protect          | Concurrency and request-isolation tests, native smoke checks            |

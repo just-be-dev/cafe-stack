@@ -29,13 +29,15 @@ Effect 4 is a stable release; older guides that call it a pre-release are out of
 - `tsconfig.json`: strict mode, `noUncheckedIndexedAccess`, bundler resolution, preserved modules, `verbatimModuleSyntax`, and the Effect language-service plugin. Browser, Worker, and Bun types are all loaded; the boundary test keeps native globals out of backend domains.
 - Language-service overrides allow the unstable `effect/http` module only in HTTP, UI command, and platform API files, and `@effect/vitest` only in test files. The HTTP test permits both. `effect-oxlint` is allowed as a duplicate Effect consumer. Add narrow per-file exceptions for other unstable APIs as you use them.
 - `vite.config.ts`: the `foldkit()` and Tailwind plugins, UI entry optimization, the `@/` alias, Effect/Foldkit deduplication, and a watch exclusion for `.alchemy/`. Alchemy adds its Cloudflare integration on top for dev and deploy. `mise run build` checks the UI bundle locally.
-- `oxlint.config.ts`: loads the Effect and Foldkit plugins, turns on three Effect error rules everywhere, and applies Foldkit's architecture rules to `src/ui/**/*.ts`.
+- `oxlint.config.ts`: loads the Effect and Foldkit plugins and turns on three Effect rules, `typescript/no-explicit-any`, `typescript/consistent-type-assertions` (no `as` casts; decode with Schema or use `satisfies`), and `no-unused-vars` (prefix intentionally unused names with `_`) everywhere. It applies Foldkit's architecture rules to `src/ui/**/*.ts`, and `no-restricted-imports` overrides keep backend domain and HTTP code and the UI from importing `src/platform/`, Alchemy, `agents`, `cloudflare:*`, or `@cloudflare/*`.
 - `components.json`: foldcn registry and UI aliases for the shadcn CLI, pointing at `src/ui/styles.css`.
 - `.mcp.json`: runs the `@foldkit/devtools-mcp` server with Bun. The tools inspect a running app's Model and Messages and support time travel during local development.
 - `public/_headers`: CSP and `nosniff` for static assets. Fonts and scripts are same-origin.
 - `src/ui/AGENTS.md`: Foldkit conventions for this release and the steps to refresh them after an upgrade.
-- `src/platform/boundary.test.ts`: the backend dependency-direction check.
+- `src/platform/boundary.test.ts`: the authoritative dependency-direction check for backend code and the UI. The lint overrides mirror it for editor feedback; the test also resolves paths exactly, including `@/`, and scans backend code for Cloudflare globals. Change both together.
 - `patches/`: two Bun patches for the Foldkit DevTools relay, documented in `patches/README.md`.
+
+The `@effect/tsgo` Oxlint presets aren't enabled. Its type-aware Oxlint integration (`effect-tsgo patch --oxlint`) replaces the native `oxlint` and `oxlint-tsgolint` binaries in `node_modules`, needs `oxlint-tsgolint` as an extra dependency, and `@effect/tsgo` `0.52.0` supports only Oxlint `1.83.0`–`1.87.0`; with the pinned `1.88.0` the patch fails with `UnsupportedTargetPackageVersionError`. The same correctness diagnostics already run during `tsc --noEmit` through the patched compiler and the language-service plugin. Reconsider when `@effect/tsgo` supports the pinned Oxlint.
 
 Point your editor at the workspace TypeScript version so the language-service plugin loads. Effect Solutions guides are useful, but check their imports and patch commands against the installed Effect 4 and native compiler.
 
