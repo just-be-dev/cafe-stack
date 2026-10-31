@@ -12,12 +12,12 @@ Website (Cloudflare.Website.Foldkit) ── static assets
           │ <base>api/*, runWorkerFirst
           ▼
 edge.ts ── service binding ── Api Worker ◀── direct client (workers.dev)
-                                   │
+                                   │  GET /api/health, POST /api/rpc
                                    ├── domain services
                                    └── D1 / Durable Objects / AI, when added
 ```
 
-The Website is a `Cloudflare.Website.Foldkit` with `env: { API: Api, BASE_PATH }` and `assets.runWorkerFirst: ["<base>api/*"]`, where the base path is `/` unless `BASE_PATH` sets a prefix. The API is a `Cloudflare.Worker` that keeps Alchemy's default `workersDev: true`, which gives it a stable workers.dev URL and per-version preview URLs. `edge.ts` gets its env type from `Cloudflare.InferEnv<typeof App>` and only forwards requests to the binding, stripping the base path first. Routing and business logic live in the API.
+The Website is a `Cloudflare.Website.Foldkit` with `env: { API: Api, BASE_PATH }` and `assets.runWorkerFirst: ["<base>api/*"]`, where the base path is `/` unless `BASE_PATH` sets a prefix. The API is a `Cloudflare.Worker` that keeps Alchemy's default `workersDev: true`, which gives it a stable workers.dev URL and per-version preview URLs. `edge.ts` gets its env type from `Cloudflare.InferEnv<typeof App>` and only forwards requests to the binding, stripping the base path first. Routing and business logic live in the API. The typed RPC endpoint, `POST /api/rpc`, needs no edge changes: it matches `<base>api/*` like any other API route, and the UI posts to `${import.meta.env.BASE_URL}api/rpc`.
 
 Both Workers are public. When the product needs protected operations, enforce authentication and authorization in the API, since requests can arrive directly or through the Website.
 

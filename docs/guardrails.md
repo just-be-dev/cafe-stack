@@ -17,7 +17,7 @@
 
 - The API is public on its workers.dev URL and through the Website. Add verified identity and authorization that covers both before exposing protected data.
 - Keep the persisted Worker logs and traces and the API's `Cloudflare.Telemetry` layer. Tune sampling and retention for your traffic. Never put secrets, auth headers, payloads, or personal data in logs or spans.
-- Cap API request bodies (32 KB is a sensible default) and return errors as `{ "error": string }`. Test both sides of the limit.
+- Cap API request bodies (32 KB is a sensible default) and return errors as `{ "error": string }`. Test both sides of the limit. `/api/rpc` does this in `RequestBounds` (`src/api.ts`): 415 for non-JSON content types, 413 once the streamed body passes 32 KB whatever `Content-Length` says, 400 when the body can't be read, and `cache-control: no-store` plus `nosniff` on every answer. Malformed RPC messages, unknown procedures, and payloads that fail Schema decoding come back as RPC defects; expected failures such as `ReservedName` are typed.
 - If the app accepts outbound URLs, guard against SSRF both when validating and right before sending: HTTPS only, no embedded credentials, no private or loopback destinations, and a clear policy for redirects and DNS.
 - Don't forward credentials or tracing headers to external hosts. Keep secrets out of business models, prompts, and workflow definitions.
 - Serve fonts and scripts from your own origin. Start from the CSP in `public/_headers` and loosen it only for resources you actually load. `style-src 'unsafe-inline'` is a candidate for tightening.

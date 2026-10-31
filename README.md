@@ -2,7 +2,7 @@
 
 A starter for TypeScript apps on Cloudflare, built with Effect 4, Foldkit, Bun, mise, and Alchemy v2.
 
-It comes with a Foldkit counter page, a small Effect service, a `GET /api/health` route, and an Alchemy stack with two Workers: a Website that serves the UI and an API. Both Workers send logs and traces to Workers Observability, and the API's Effect spans show up in Cloudflare's trace view.
+It comes with a Foldkit page (a counter and a typed RPC call), a small Effect service, a `GET /api/health` route, a typed Effect RPC endpoint at `POST /api/rpc`, and an Alchemy stack with two Workers: a Website that serves the UI and an API. Both Workers send logs and traces to Workers Observability, and the API's Effect spans show up in Cloudflare's trace view.
 
 ```sh
 mise trust && mise install
@@ -11,7 +11,7 @@ mise run build
 mise run dev
 ```
 
-`mise run dev` prints a Website URL. The UI is served there, and `/api/*` is forwarded to the API Worker, which also has its own workers.dev URL. `GET /api/health` returns `{ "name": "Project starter", "status": "ok" }`. Unknown API routes return a JSON 404.
+`mise run dev` prints a Website URL. The UI is served there, and `/api/*` is forwarded to the API Worker, which also has its own workers.dev URL. `GET /api/health` returns `{ "name": "Project starter", "status": "ok" }`. `POST /api/rpc` serves the `AppRpcs` group from `src/rpc.ts`, which the UI calls through a typed client. Unknown API routes return a JSON 404.
 
 ## Layout
 
@@ -19,13 +19,15 @@ mise run dev
 alchemy.run.ts                   re-exports the platform stack
 src/
   model.ts / service.ts          portable Schema and Effect service
-  api.ts / api.test.ts           routes and HTTP contract tests
+  rpc.ts / rpc.test.ts           shared RPC contract; client-server tests
+  api.ts / api.test.ts           routes, RPC request bounds, HTTP tests
   platform/
     boundary.test.ts             keeps platform imports out of domain code
     cloudflare/{stack,api,edge}.ts  resources, API Worker, forwarding edge
   ui/
-    entry.ts                     runtime boot
-    main.ts                      Model, Messages, init, update, view
+    entry.ts                     runtime boot, provides the RPC client
+    api.ts / api.test.ts         typed RPC client and Command tests
+    main.ts                      Model, Messages, Commands, update, view
     styles.css                   light/dark Tailwind theme
     components/ui/               foldcn badge, bubble, button, empty,
                                  input, message, and textarea
