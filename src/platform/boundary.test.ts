@@ -8,11 +8,12 @@ import { fileURLToPath } from "node:url";
 // alias, and scans backend code for Cloudflare globals.
 
 const src = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const e2e = resolve(src, "..", "e2e");
 const backendOnlyPackage = /^(alchemy|cloudflare:|@cloudflare\/|agents(?:\/|$))/;
 
-const sources = async function* (include: (path: string) => boolean) {
-  for await (const path of glob("**/*.ts", { cwd: src })) {
-    if (include(path)) yield { path, source: await readFile(resolve(src, path), "utf8") };
+const sources = async function* (include: (path: string) => boolean, root = src) {
+  for await (const path of glob("**/*.ts", { cwd: root })) {
+    if (include(path)) yield { path, source: await readFile(resolve(root, path), "utf8") };
   }
 };
 
@@ -23,19 +24,19 @@ const importSpecifiers = (source: string) =>
     .filter((specifier) => specifier !== undefined);
 
 // Resolves relative and `@/` specifiers to absolute paths; packages resolve to undefined.
-const resolveSpecifier = (path: string, specifier: string) =>
+const resolveSpecifier = (path: string, specifier: string, root = src) =>
   specifier.startsWith("@/")
     ? resolve(src, "ui", specifier.slice(2))
     : specifier.startsWith(".")
-      ? resolve(src, dirname(path), specifier)
+      ? resolve(root, dirname(path), specifier)
       : undefined;
 
-const importViolations = (path: string, source: string) =>
+const importViolations = (path: string, source: string, root = src) =>
   importSpecifiers(source)
     .filter(
       (specifier) =>
         backendOnlyPackage.test(specifier) ||
-        (resolveSpecifier(path, specifier)?.startsWith(`${src}/platform/`) ?? false),
+        (resolveSpecifier(path, specifier, root)?.startsWith(`${src}/platform/`) ?? false),
     )
     .map((specifier) => `${path}: ${specifier}`);
 
@@ -58,6 +59,15 @@ it("the UI doesn't depend on platform adapters or backend-only SDKs", async () =
   const violations: Array<string> = [];
   for await (const { path, source } of sources((path) => path.startsWith("ui/"))) {
     violations.push(...importViolations(path, source));
+  }
+  expect(violations).toEqual([]);
+});
+
+// Browser tests answer the UI with the portable routes in src/api.ts, never the Workers.
+it("browser tests don't depend on platform adapters or backend-only SDKs", async () => {
+  const violations: Array<string> = [];
+  for await (const { path, source } of sources(() => true, e2e)) {
+    violations.push(...importViolations(path, source, e2e).map((violation) => `e2e/${violation}`));
   }
   expect(violations).toEqual([]);
 });

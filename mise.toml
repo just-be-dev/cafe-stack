@@ -30,6 +30,14 @@ run = "bun run test"
 [tasks."test:watch"]
 run = "bun run test:watch"
 
+[tasks."test:e2e"]
+description = "Build the UI and run the Playwright browser tests against vite preview"
+run = "bun run test:e2e"
+
+[tasks."test:e2e:install"]
+description = "Install the Chromium and WebKit builds Playwright needs (add --with-deps on Linux)"
+run = "bun run test:e2e:install"
+
 [tasks.build]
 run = "bun run build"
 
