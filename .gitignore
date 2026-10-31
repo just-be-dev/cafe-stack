@@ -8,3 +8,4 @@ dist/
 .dev.vars
 .dev.vars.*
 repos/
+.vitest/
