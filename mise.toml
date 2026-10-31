@@ -55,6 +55,28 @@ description = "Add a foldcn component to src/ui"
 usage = 'arg "<name>" help="foldcn component name, e.g. button"'
 run = 'bunx shadcn@latest add "@foldcn/${usage_name}"'
 
+[tasks."foldkit:source"]
+description = "Shallow-clone Foldkit at the installed release tag into repos/foldkit"
+run = '''
+set -eu
+version=$(node -p 'require("./node_modules/foldkit/package.json").version')
+tag="foldkit@$version"
+dest=repos/foldkit
+case "$version" in
+  *-*) echo "foldkit $version is a prerelease; clone the commit named in its version by hand" >&2; exit 1 ;;
+esac
+if [ -d "$dest/.git" ] && git -C "$dest" tag --points-at HEAD | grep -qxF "$tag"; then
+  echo "$dest is already at $tag"
+  exit 0
+fi
+mkdir -p repos
+rm -rf "$dest.tmp"
+git -c advice.detachedHead=false clone --quiet --depth 1 --single-branch --branch "$tag" https://github.com/foldkit/foldkit.git "$dest.tmp"
+rm -rf "$dest"
+mv "$dest.tmp" "$dest"
+echo "Cloned $tag into $dest"
+'''
+
 [tasks.patch]
 description = "Prepare a dependency in node_modules for patching"
 usage = 'arg "<package>" help="package name, e.g. @foldkit/vite-plugin"'
