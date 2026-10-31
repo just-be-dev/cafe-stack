@@ -18,7 +18,7 @@ Every dependency in `package.json` is pinned to an exact version, and `bun.lock`
 | Oxfmt / Oxlint                       | Formatting and linting                                     |
 | Effect Oxlint plugin                 | Effect lint rules                                          |
 | Cloudflare types / workerd override  | Worker types and a pinned workerd                          |
-| UI assets                            | Fontsource fonts, Lucide, `cn`, `tw-animate-css`           |
+| UI assets                            | Fontsource fonts, `cn`, `tw-animate-css`                   |
 
 Effect 4 is a stable release; older guides that call it a pre-release are out of date. TypeScript 7 ships its native compiler as `tsc`, and the `prepare` script runs `effect-tsgo patch` on it. Check both when upgrading.
 
@@ -71,13 +71,13 @@ Effect and its platform packages are aligned at `4.0.4` through exact overrides.
 
 `@effect/vitest` is pinned at `4.0.4` to match Effect, with Vitest `5.0.4` satisfying its peer dependency. Use the stable package versions here rather than the older beta installation command in the Effect Solutions guide. Bun still installs dependencies and runs project scripts; Vitest runs the tests on the pinned Node.js runtime.
 
-Agents' required MCP peers (`@modelcontextprotocol/client`, `@modelcontextprotocol/server`, and `@modelcontextprotocol/sdk`) are explicit exact dependencies. Foldkit DevTools keeps its own SDK version, as required by its package.
+Some dependencies aren't imported anywhere in `src/` but are still needed: `@effect/platform-browser` is a Foldkit peer, `@effect/platform-bun` is loaded by the Alchemy CLI when it runs under Bun, and `@types/bun` supplies the `fetch` types the tests use. Foldkit DevTools brings its own MCP SDK.
 
 The workerd override is `1.20261014.1`; Alchemy's Cloudflare runtime currently pins an older build. Revisit the override whenever you upgrade Alchemy and smoke-test both local Workers.
 
 ## AI and durable workflows
 
-`@earendil-works/pi-ai`, `@earendil-works/pi-durable`, and `agents` are installed and ready to use. Remove them if the product doesn't need AI or durable workflows.
+No AI or durable-workflow packages are installed. When the product needs them, add exact pins for `@earendil-works/pi-ai`, `@earendil-works/pi-durable`, or `agents`. `agents` also needs exact pins for its MCP peers (`@modelcontextprotocol/client`, `@modelcontextprotocol/server`, and `@modelcontextprotocol/sdk`). The boundary test and lint rules already keep `agents` inside `src/platform/`.
 
 Define the AI or conversation capability in its owning domain and implement it with Workers AI or pi in `src/platform/cloudflare/`. Wrap Promise calls in `Effect.tryPromise`, decode model output with Schema, and make prompting, persistence, and retry policies explicit.
 
