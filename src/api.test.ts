@@ -6,6 +6,11 @@ import { apiRoutes } from "./api.ts";
 import { MAX_RPC_REQUEST_BYTES } from "./rpc.ts";
 import { AppInfo } from "./service.ts";
 
+// Streaming request bodies need `duplex`, which the Workers RequestInit typing omits.
+const streamingRequest = (
+  init: Omit<RequestInit, "body"> & { body: ReadableStream; duplex: "half" },
+) => new Request("http://app/api/rpc", init);
+
 const makeHandler = Effect.acquireRelease(
   Effect.sync(() =>
     HttpRouter.toWebHandler(
@@ -175,12 +180,12 @@ describe("POST /api/rpc", () => {
         },
       });
       const response = yield* handle(
-        new Request("http://app/api/rpc", {
+        streamingRequest({
           method: "POST",
           headers: { "content-type": "application/json", "content-length": "1" },
           body,
           duplex: "half",
-        } as RequestInit),
+        }),
       );
       expect(response.status).toBe(413);
       // An endless body is cut off just past the limit instead of read to the end.
@@ -197,12 +202,12 @@ describe("POST /api/rpc", () => {
         },
       });
       const response = yield* handle(
-        new Request("http://app/api/rpc", {
+        streamingRequest({
           method: "POST",
           headers: { "content-type": "application/json" },
           body,
           duplex: "half",
-        } as RequestInit),
+        }),
       );
       expect(response.status).toBe(400);
       expectApiHeaders(response);
