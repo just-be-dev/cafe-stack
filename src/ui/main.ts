@@ -74,7 +74,7 @@ export const FetchGreeting = Command.define("FetchGreeting", {
     }).pipe(
       Effect.timeout(GREETING_TIMEOUT),
       Effect.catchTag("ReservedName", (error) =>
-        failedFetchGreeting(GreetingFailure.ReservedName({ name: error.name })),
+        failedFetchGreeting(GreetingFailure.ReservedName({ name: error.requestedName })),
       ),
       Effect.catch(() => failedFetchGreeting(GreetingFailure.Unavailable())),
       Effect.catchDefect((defect) =>

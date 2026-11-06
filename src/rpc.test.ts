@@ -54,7 +54,7 @@ it.effect("the expected failure arrives typed and structurally recognizable", ()
       .mockRejectedValue(new Error("Unexpected outbound HTTP"));
     const error = yield* Effect.flip(greet("ROOT"));
     expect(error._tag).toBe("ReservedName");
-    expect(error).toMatchObject({ _tag: "ReservedName", name: "ROOT" });
+    expect(error).toMatchObject({ _tag: "ReservedName", requestedName: "ROOT" });
     expect(outbound).not.toHaveBeenCalled();
   }),
 );

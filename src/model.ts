@@ -19,5 +19,5 @@ export class ReservedName extends Schema.TaggedError<
   ReservedName,
   { readonly brand: unique symbol }
 >()("ReservedName", {
-  name: GreetingName,
+  requestedName: GreetingName,
 }) {}

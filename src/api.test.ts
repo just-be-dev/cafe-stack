@@ -89,7 +89,7 @@ describe("POST /api/rpc", () => {
           requestId: "1",
           exit: {
             _tag: "Failure",
-            cause: [{ _tag: "Fail", error: { _tag: "ReservedName", name: "Admin" } }],
+            cause: [{ _tag: "Fail", error: { _tag: "ReservedName", requestedName: "Admin" } }],
           },
         },
       ]);

@@ -17,7 +17,7 @@ const reservedNames = new Set(["admin", "root", "system"]);
 /** Greets a visitor by name, refusing names reserved for the system. */
 export const greet = Effect.fn("AppInfo.greet")(function* (name: GreetingName) {
   if (reservedNames.has(name.toLowerCase())) {
-    return yield* new ReservedName({ name });
+    return yield* new ReservedName({ requestedName: name });
   }
   const info = yield* (yield* AppInfo).read;
   return Greeting.make({ message: `Hello, ${name}!`, app: info.name });
