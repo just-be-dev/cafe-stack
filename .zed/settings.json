@@ -1,0 +1,26 @@
+// Zed project settings. TypeScript runs on the workspace tsrs, patched with Effect diagnostics by
+// `effect-tsgo patch --tsrs` on install, so the editor reports what `mise run typecheck` reports.
+// Needs the "TypeScript Language Server" (tsgo) extension, which provides the `typescript-ls`
+// server; this file points it at tsrs instead of its own TypeScript download. vtsls and
+// typescript-language-server are off because they'd check without the Effect diagnostics.
+{
+  "languages": {
+    "TypeScript": {
+      "language_servers": ["typescript-ls", "!vtsls", "!typescript-language-server", "..."]
+    },
+    "TSX": {
+      "language_servers": ["typescript-ls", "!vtsls", "!typescript-language-server", "..."]
+    },
+    "JavaScript": {
+      "language_servers": ["typescript-ls", "!vtsls", "!typescript-language-server", "..."]
+    }
+  },
+  "lsp": {
+    "typescript-ls": {
+      "binary": {
+        "path": "node_modules/.bin/tsrs",
+        "arguments": ["--lsp", "--stdio"]
+      }
+    }
+  }
+}

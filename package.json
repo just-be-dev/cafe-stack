@@ -6,7 +6,7 @@
     "dev": "alchemy dev",
     "deploy": "alchemy deploy",
     "build": "vite build",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsrs --noEmit",
     "lint": "oxlint .",
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
@@ -14,7 +14,7 @@
     "test:watch": "vitest --watch",
     "test:e2e": "playwright test",
     "test:e2e:install": "playwright install chromium webkit",
-    "prepare": "effect-tsgo patch"
+    "prepare": "effect-tsgo patch --tsrs --no-typescript"
   },
   "dependencies": {
     "@effect/platform-browser": "4.0.4",
@@ -33,8 +33,7 @@
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",
     "@cloudflare/workers-types": "5.20261014.1",
-    "@effect/language-service": "0.87.4",
-    "@effect/tsgo": "0.52.0",
+    "@effect/tsgo": "0.67.4",
     "@effect/vitest": "4.0.4",
     "@foldkit/devtools-mcp": "0.24.1",
     "@foldkit/oxlint-plugin": "0.15.3",
@@ -44,7 +43,7 @@
     "@types/bun": "1.4.3",
     "oxfmt": "0.73.0",
     "oxlint": "1.88.0",
-    "typescript": "7.0.2",
+    "tsrs": "0.22.0-ts7.1.0-beta",
     "vite": "8.3.4",
     "vitest": "5.0.4"
   },

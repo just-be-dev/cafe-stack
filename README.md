@@ -41,7 +41,7 @@ e2e/
   page.ts                        shared page checks (clean boot, CSP, focus)
 ```
 
-Root files configure Bun, mise, Node.js, TypeScript, Vite, Vitest with `@effect/vitest`, Playwright, Oxlint/Oxfmt, foldcn, the Foldkit DevTools MCP server, and dependency patches.
+Root files configure Bun, mise, Node.js, TypeScript (checked by tsrs), Zed and Neovim language servers, Vite, Vitest with `@effect/vitest`, Playwright, Oxlint/Oxfmt, foldcn, the Foldkit DevTools MCP server, and dependency patches.
 
 GitHub Actions (`.github/workflows/ci.yml`) runs `mise run check` and `mise run build` on pushes to `main` and on pull requests, then the Playwright suite in Chromium and WebKit in a separate `browser` job. It doesn't deploy and needs no secrets. The browser tests serve the UI with `vite preview` and answer `/api/*` with the real routes in the test process, so native Worker, D1, Durable Object, and AI behavior still needs checks under `mise run dev`.
 
