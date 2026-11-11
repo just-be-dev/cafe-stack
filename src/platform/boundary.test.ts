@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 
 const src = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const e2e = resolve(src, "..", "e2e");
-const backendOnlyPackage = /^(alchemy|cloudflare:|@cloudflare\/|agents(?:\/|$))/;
+const backendOnlyPackage = /^(alchemy|@alchemy\.run\/|cloudflare:|@cloudflare\/|agents(?:\/|$))/;
 
 const sources = async function* (include: (path: string) => boolean, root = src) {
   for await (const path of glob("**/*.ts", { cwd: root })) {

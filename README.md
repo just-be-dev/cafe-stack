@@ -95,4 +95,4 @@ After a deploy, request `/api/health` and open **Workers & Pages â†’ App / Api â
 | [Guardrails](docs/guardrails.md)          | Boundaries, security, verification, what needs approval |
 | [Agent instructions](AGENTS.md)           | Rules for agents working in this repo                   |
 | [UI agent instructions](src/ui/AGENTS.md) | Foldkit architecture, testing, components, upgrades     |
-| [Dependency patches](patches/README.md)   | Alchemy and Foldkit DevTools fixes                      |
+| [Dependency patches](patches/README.md)   | Patch policy and retired patches                        |

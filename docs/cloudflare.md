@@ -27,7 +27,7 @@ Both Workers also set `enable_request_signal` and `request_signal_passthrough`. 
 
 - Verified locally: both Workers boot with the flags under `alchemy dev`, and `/api/health` answers through the Website URL.
 - Not verified: propagation itself. Under `alchemy dev`, a Bun proxy sits in front of each local Worker and doesn't pass client disconnects on, so `request.signal` never aborted locally, not even on direct requests to the API. Check it on a deployed preview stage.
-- Alchemy's Effect bridge (`2.0.0-beta.83`) doesn't interrupt the handler fiber when the signal aborts, unlike Effect's own `HttpEffect.toWebHandler`. A handler that should stop work on abort has to read the raw request from `Cloudflare.Request` and listen to its `signal`.
+- Since `2.0.0-beta.85`, Alchemy's Effect bridge interrupts the handler fiber when the signal aborts, as Effect's own `HttpEffect.toWebHandler` does: finalizers run, kept alive with `waitUntil`, and the response is a 499 (`@alchemy.run/cloudflare`, `src/Workers/HttpServer.ts`). Without `enable_request_signal`, Cloudflare cancels the request and finalizers never run.
 
 Remove both flags if a Worker misbehaves around request cloning or cancellation.
 
@@ -95,5 +95,5 @@ This is a variant, not the default. Prerendered pages can still ship as assets. 
 ## References
 
 - [Alchemy documentation index](https://alchemy.run/llms.txt). Append `.md` to any docs page URL for Markdown.
-- `node_modules/alchemy/src`, the final word on the installed version.
+- `node_modules/alchemy/src` (core) and `node_modules/@alchemy.run/cloudflare/src` (Cloudflare provider), the final word on the installed version.
 - [Cloudflare Workers](https://developers.cloudflare.com/workers/), [Workers Observability](https://developers.cloudflare.com/workers/observability/), [Durable Objects](https://developers.cloudflare.com/durable-objects/), and [D1](https://developers.cloudflare.com/d1/).

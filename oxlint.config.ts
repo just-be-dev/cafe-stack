@@ -6,7 +6,7 @@ import foldkit from "@foldkit/oxlint-plugin";
 // paths exactly and scans for Cloudflare globals. Keep the two in sync.
 const backendOnlyPackages = [
   {
-    regex: "^(?:alchemy|agents)(?:/|$)",
+    regex: "^(?:alchemy|@alchemy\\.run|agents)(?:/|$)",
     message: "Only src/platform/ may depend on Alchemy or agents.",
   },
   {

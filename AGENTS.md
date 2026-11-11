@@ -28,7 +28,7 @@ A runnable starter. Read `README.md` and `docs/`, replace the sample service and
 
 ## Alchemy v2 and Cloudflare
 
-- Use Alchemy v2's Effect API. `node_modules/alchemy/src` is the final reference; docs start at https://alchemy.run/llms.txt.
+- Use Alchemy v2's Effect API. `node_modules/alchemy/src` (core) and `node_modules/@alchemy.run/cloudflare/src` (Cloudflare provider) are the final reference; docs start at https://alchemy.run/llms.txt.
 - A Worker or Durable Object's outer Effect runs at plan time and cold start: declare and acquire bindings there. Storage, raw bindings, callbacks, and identity are usable only in the returned instance or request handler.
 - Never load `cloudflare:*` at module top level on a path imported at plan time.
 - The Website edge only forwards requests. The API Worker is public on its workers.dev URL and also reached through the Website's service binding; both paths hit the same routes.

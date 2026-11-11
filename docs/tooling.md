@@ -37,7 +37,7 @@ Effect 4 is a stable release; older guides that call it a pre-release are out of
 - `public/_headers`: CSP and `nosniff` for static assets. Fonts, images (including `public/favicon.svg`), and scripts are same-origin.
 - `src/ui/AGENTS.md`: Foldkit conventions for this release and the steps to refresh them after an upgrade.
 - `src/platform/boundary.test.ts`: the authoritative dependency-direction check for backend code, the UI, and `e2e/`. The lint overrides mirror it for editor feedback; the test also resolves paths exactly, including `@/`, and scans backend code for Cloudflare globals. Change both together.
-- `patches/`: two Bun patches for the Foldkit DevTools relay, documented in `patches/README.md`.
+- `patches/`: Bun patches, documented in `patches/README.md`. None are active right now.
 
 The `@effect/tsgo` Oxlint presets aren't enabled. `@effect/tsgo` `0.67.4` supports the pinned Oxlint, and `effect-tsgo --tsrs-lint oxlint --type-aware` could run them on tsrs, but the same Effect diagnostics already run during `tsrs --noEmit`, so enabling them would report each finding twice.
 
@@ -71,15 +71,15 @@ mise run dev
 
 ## Patches
 
-Under `alchemy dev`, Cloudflare's Vite upgrade listener interferes with Foldkit's DevTools relay on Vite's HTTP server. One patch moves the relay to its own token-protected loopback listener. The other adds backoff when a connection closes right after opening, in both MCP client entry points. The Vite patch also adapts UUID generation to Effect 4.0.4. See [patches/README.md](../patches/README.md).
+No patches are active. The Foldkit DevTools relay patches were dropped with Foldkit `0.170.0`, whose Vite plugin always hosts the relay on its own token-protected loopback listener and whose MCP server connects on demand instead of looping on reconnects. See [patches/README.md](../patches/README.md).
 
 Edit patches with `mise run patch <package>` and `mise run patch:commit <package>`, and document the symptom, cause, fix, and when to remove it. After an upgrade, check whether each patch is still needed and run a browser-connected DevTools session under `alchemy dev`; a clean install doesn't prove the relay is stable. Keep the relay on loopback with its token.
 
-Effect and its platform packages are aligned at `4.0.4` through exact overrides. Foldkit `0.168.0`, its tools, and the Effect lint wrapper still declare `4.0.0` dependencies or peers; the overrides keep one Effect instance and matching platform APIs. Recheck these overrides against upstream declarations on every upgrade and verify the native Workers and browser runtime together.
+Effect and its platform packages are aligned at `4.1.3` through exact overrides. Alchemy `2.0.0-beta.85` (`alchemy`, `@alchemy.run/cloudflare`, `@alchemy.run/frontend-frameworks`) needs Effect `^4.1`, and Foldkit `0.170.0` and its tools need `~4.1.0`. The Effect lint wrapper still depends on `4.0.0`; the overrides keep one Effect instance and matching platform APIs. Recheck these overrides against upstream declarations on every upgrade and verify the native Workers and browser runtime together.
 
 `@playwright/test` and `@axe-core/playwright` are exact pins. Playwright downloads browsers that match its version, so run `mise run test:e2e:install` after upgrading it (CI passes `--with-deps` to add the Ubuntu system libraries). The Playwright runner runs on Node.js; Bun only launches it.
 
-`@effect/vitest` is pinned at `4.0.4` to match Effect, with Vitest `5.0.4` satisfying its peer dependency. Use the stable package versions here rather than the older beta installation command in the Effect Solutions guide. Bun still installs dependencies and runs project scripts; Vitest runs the tests on the pinned Node.js runtime.
+`@effect/vitest` is pinned at `4.1.3` to match Effect, with Vitest `5.0.4` satisfying its peer dependency. Use the stable package versions here rather than the older beta installation command in the Effect Solutions guide. Bun still installs dependencies and runs project scripts; Vitest runs the tests on the pinned Node.js runtime.
 
 Some dependencies aren't imported anywhere in `src/` but are still needed: `@effect/platform-browser` is a Foldkit peer, `@effect/platform-bun` is loaded by the Alchemy CLI when it runs under Bun, and `@types/bun` supplies the `fetch` types the tests use. Foldkit DevTools brings its own MCP SDK.
 
